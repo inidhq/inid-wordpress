@@ -71,11 +71,22 @@ class InID_Rest
             return new WP_REST_Response(['error' => $user_id->get_error_code()], 500);
         }
         wp_set_current_user($user_id);
+        // Nonces made in this same request must belong to the new session (see "stay")
+        add_action('set_logged_in_cookie', function ($cookie) {
+            $_COOKIE[LOGGED_IN_COOKIE] = $cookie;
+        });
         wp_set_auth_cookie($user_id, true, is_ssl());
         do_action('wp_login', get_userdata($user_id)->user_login, get_userdata($user_id));
-        // From a checkout InID just filled ("stay"): logged in, and the buyer stays there
+        // From a checkout InID just filled ("stay"): logged in, the checkout in progress
+        // holds the data, and the buyer stays there
         if ($request->get_param('stay')) {
-            return ['ok' => true, 'given_name' => (string) ($customer['given_name'] ?? '')];
+            $this->customers->prefill_checkout($user_id, $customer);
+            // The block checkout's nonce was the guest's: it gets the logged-in one
+            return [
+                'ok' => true,
+                'given_name' => (string) ($customer['given_name'] ?? ''),
+                'store_api_nonce' => wp_create_nonce('wc_store_api'),
+            ];
         }
         return ['ok' => true, 'redirect' => wc_get_page_permalink('myaccount')];
     }

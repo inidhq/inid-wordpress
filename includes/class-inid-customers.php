@@ -81,6 +81,37 @@ class InID_Customers
     private function fill_addresses(int $user_id, array $c): void
     {
         $customer = new WC_Customer($user_id);
+        $this->apply($customer, $c);
+        $customer->save();
+        if (!empty($c['national_id']['number'])) {
+            update_user_meta($user_id, 'billing_document_type', sanitize_text_field($c['national_id']['type'] ?? 'CC'));
+            update_user_meta($user_id, 'billing_document', sanitize_text_field($c['national_id']['number']));
+        }
+    }
+
+    /**
+     * The checkout in progress gets the buyer's data straight into WooCommerce's session:
+     * every step of the checkout (and a reload) shows it, whatever the theme's fields are.
+     * Called right after the buyer is logged in from a checkout InID filled.
+     */
+    public function prefill_checkout(int $user_id, array $c): void
+    {
+        if (!function_exists('WC')) {
+            return;
+        }
+        // REST requests don't start WooCommerce's session; this one moves the guest's
+        // cart to the account that just logged in
+        if (null === WC()->session) {
+            WC()->initialize_session();
+        }
+        WC()->customer = new WC_Customer($user_id, true);
+        $this->apply(WC()->customer, $c);
+        WC()->customer->save();
+    }
+
+    /** The InID claims on a WooCommerce customer, billing and shipping, not saved yet */
+    private function apply(WC_Customer $customer, array $c): void
+    {
         $phone = preg_replace('/^\+57/', '', (string) ($c['phone_number'] ?? ''));
         $address = (array) ($c['address'] ?? []);
         foreach (['billing', 'shipping'] as $type) {
@@ -101,11 +132,6 @@ class InID_Customers
         }
         if (!empty($c['email']) && !$customer->get_billing_email() && !email_exists($c['email'])) {
             $customer->set_billing_email(sanitize_email($c['email']));
-        }
-        $customer->save();
-        if (!empty($c['national_id']['number'])) {
-            update_user_meta($user_id, 'billing_document_type', sanitize_text_field($c['national_id']['type'] ?? 'CC'));
-            update_user_meta($user_id, 'billing_document', sanitize_text_field($c['national_id']['number']));
         }
     }
 
