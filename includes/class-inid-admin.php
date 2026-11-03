@@ -60,7 +60,7 @@ class InID_Admin
         $webhook = rest_url('inid/v1/webhook');
         ?>
         <div class="wrap">
-            <h1>InID · Registro en un toque</h1>
+            <h1><svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true" style="vertical-align:-7px;margin-right:8px"><rect width="100" height="100" rx="23" fill="#111113"/><rect x="24" y="50" width="20" height="20" rx="3" fill="#fff"/><rect x="56" y="30" width="20" height="20" rx="3" fill="#c6ff3d"/></svg>InID · Registro en un toque</h1>
             <?php if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Guardado.</p></div><?php endif; ?>
 
             <?php if ($funnel && !is_wp_error($funnel)) :
@@ -70,7 +70,7 @@ class InID_Admin
                 <?php $pct = function ($v) { return $v === null ? '—' : str_replace('.', ',', (string) $v) . ' %'; }; ?>
                 <h2>Últimos 7 días</h2>
                 <div style="display:flex;gap:16px;margin:8px 0 14px">
-                    <div class="card" style="margin:0;padding:12px 16px;max-width:none;border-color:#72aee6"><p style="margin:0">Completan el checkout <strong>con InID</strong></p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($pct($funnel['compare']['withInid'] ?? null)); ?></strong></p></div>
+                    <div class="card" style="margin:0;padding:12px 16px;max-width:none;border-color:#111113;background:#f7ffe6"><p style="margin:0">Completan el checkout <strong>con InID</strong></p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($pct($funnel['compare']['withInid'] ?? null)); ?></strong></p></div>
                     <div class="card" style="margin:0;padding:12px 16px;max-width:none"><p style="margin:0">Completan el checkout <strong>sin InID</strong></p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($pct($funnel['compare']['withoutInid'] ?? null)); ?></strong></p></div>
                 </div>
                 <p>Solo conteos: InID no le dice a la tienda quién visitó su sitio. Cuentas creadas con InID: <strong><?php echo esc_html($this->customers->created_count()); ?></strong>.</p>
