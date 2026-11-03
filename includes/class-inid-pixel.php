@@ -50,6 +50,8 @@ class InID_Pixel
             return $tag;
         }
         $attrs = ' data-key="' . esc_attr($this->settings->get('publishable_key')) . '"';
+        // One-click sign in / sign up: the pixel sends the token here and follows the redirect
+        $attrs .= ' data-signin="' . esc_url(rest_url('inid/v1/login')) . '"';
         $invite = $this->invitation();
         if ($invite) {
             $attrs .= ' data-invite="' . esc_attr($invite) . '"';
