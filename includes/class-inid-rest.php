@@ -73,6 +73,10 @@ class InID_Rest
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id, true, is_ssl());
         do_action('wp_login', get_userdata($user_id)->user_login, get_userdata($user_id));
+        // From a checkout InID just filled ("stay"): logged in, and the buyer stays there
+        if ($request->get_param('stay')) {
+            return ['ok' => true, 'given_name' => (string) ($customer['given_name'] ?? '')];
+        }
         return ['ok' => true, 'redirect' => wc_get_page_permalink('myaccount')];
     }
 }
