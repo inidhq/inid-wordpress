@@ -16,6 +16,8 @@ class InID_Admin
         'abandoned' => 'Lo dejaron sin enviar',
         'saved' => 'Guardaron sus datos aquí',
         'dismissed' => 'Cerraron el saludo',
+        'form_seen' => 'Vieron el formulario (todos)',
+        'form_sent' => 'Enviaron el formulario (todos)',
     ];
 
     /** @var InID_Settings */
@@ -65,7 +67,12 @@ class InID_Admin
                 $totals = $funnel['totals'];
                 $max = max(1, max(array_values($totals)));
                 ?>
+                <?php $pct = function ($v) { return $v === null ? '—' : str_replace('.', ',', (string) $v) . ' %'; }; ?>
                 <h2>Últimos 7 días</h2>
+                <div style="display:flex;gap:16px;margin:8px 0 14px">
+                    <div class="card" style="margin:0;padding:12px 16px;max-width:none;border-color:#72aee6"><p style="margin:0">Completan el checkout <strong>con InID</strong></p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($pct($funnel['compare']['withInid'] ?? null)); ?></strong></p></div>
+                    <div class="card" style="margin:0;padding:12px 16px;max-width:none"><p style="margin:0">Completan el checkout <strong>sin InID</strong></p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($pct($funnel['compare']['withoutInid'] ?? null)); ?></strong></p></div>
+                </div>
                 <p>Solo conteos: InID no le dice a la tienda quién visitó su sitio. Cuentas creadas con InID: <strong><?php echo esc_html($this->customers->created_count()); ?></strong>.</p>
                 <table class="widefat striped" style="max-width:720px">
                     <?php foreach (self::STEPS as $key => $label) : $n = (int) ($totals[$key] ?? 0); ?>
