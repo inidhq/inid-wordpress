@@ -43,6 +43,14 @@ class InID_Rest
             return new WP_REST_Response(['error' => 'bad_signature'], 401);
         }
         $event = json_decode($request->get_body(), true);
+        // The buyer closed their InID everywhere: their WordPress sessions close too
+        if (($event['type'] ?? '') === 'customer.logged_out') {
+            $user_id = $this->customers->find(sanitize_text_field((string) ($event['sub'] ?? '')));
+            if ($user_id) {
+                WP_Session_Tokens::get_instance($user_id)->destroy_all();
+            }
+            return ['ok' => true];
+        }
         $customer = $this->client->exchange((string) ($event['token'] ?? ''));
         if (is_wp_error($customer)) {
             return new WP_REST_Response(['error' => $customer->get_error_code()], 400);
