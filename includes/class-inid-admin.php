@@ -100,12 +100,26 @@ class InID_Admin
         $audience = $this->settings->ready() ? $this->client->audience(30) : null;
         $account = $this->settings->ready() ? $this->client->account() : null;
         $offer = ($account && !is_wp_error($account)) ? ($account['recoveryOffer'] ?? null) : null;
+        $insights = $this->settings->ready() ? $this->client->insights(isset($_GET['fresh'])) : null;
         $abandoned = $this->customers->abandoned();
         $webhook = rest_url('inid/v1/webhook');
         ?>
         <div class="wrap">
             <h1><svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true" style="vertical-align:-7px;margin-right:8px"><rect width="100" height="100" rx="23" fill="#111113"/><rect x="24" y="50" width="20" height="20" rx="3" fill="#fff"/><rect x="56" y="30" width="20" height="20" rx="3" fill="#c6ff3d"/></svg>InID · Registro en un toque</h1>
             <?php if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Guardado.</p></div><?php endif; ?>
+
+            <?php if ($insights && !is_wp_error($insights)) : ?>
+                <h2>Tu semana</h2>
+                <div class="card" style="max-width:720px">
+                    <p style="font-size:15px;font-weight:600;margin-top:0"><?php echo esc_html($insights['headline']); ?></p>
+                    <ol>
+                        <?php foreach ((array) $insights['items'] as $item) : ?>
+                            <li style="margin-bottom:10px"><strong><?php echo esc_html($item['title']); ?></strong><br><?php echo esc_html($item['finding']); ?><br>Prueba: <?php echo esc_html($item['suggestion']); ?></li>
+                        <?php endforeach; ?>
+                    </ol>
+                    <p class="description"><?php echo $insights['source'] === 'ai' ? 'Escrito con IA a partir de tus totales anónimos' : 'Resumen automático a partir de tus totales anónimos'; ?> · <a href="<?php echo esc_url(admin_url('admin.php?page=inid&fresh=1')); ?>">Escribir de nuevo</a></p>
+                </div>
+            <?php endif; ?>
 
             <?php if ($funnel && !is_wp_error($funnel)) :
                 $totals = $funnel['totals'];
