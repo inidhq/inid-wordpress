@@ -54,6 +54,27 @@ class InID_Client
         return $this->decode($response);
     }
 
+    /** The store's offer for buyers who left at its checkout (null turns it off) */
+    public function account()
+    {
+        $response = wp_remote_get($this->settings->merchant_url() . '/v1/account', [
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
+            'timeout' => 8,
+        ]);
+        return $this->decode($response);
+    }
+
+    public function set_offer(?array $offer)
+    {
+        $response = wp_remote_request($this->settings->merchant_url() . '/v1/offer', [
+            'method' => $offer ? 'PUT' : 'DELETE',
+            'headers' => array_merge(['Authorization' => 'Bearer ' . $this->settings->get('secret_key')], $offer ? ['Content-Type' => 'application/json'] : []),
+            'body' => $offer ? wp_json_encode($offer) : null,
+            'timeout' => 8,
+        ]);
+        return $this->decode($response);
+    }
+
     /** InID-Signature: t=<seconds>,v1=<HMAC-SHA256 of "t.body"> with the webhook secret. */
     public function verify_webhook(string $raw_body, string $header): bool
     {

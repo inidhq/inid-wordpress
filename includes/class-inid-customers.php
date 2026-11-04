@@ -87,6 +87,14 @@ class InID_Customers
             update_user_meta($user_id, 'billing_document_type', sanitize_text_field($c['national_id']['type'] ?? 'CC'));
             update_user_meta($user_id, 'billing_document', sanitize_text_field($c['national_id']['number']));
         }
+        // Facts InID checked (never a score): shown in the users list
+        if (!empty($c['inid_signals']) && is_array($c['inid_signals'])) {
+            update_user_meta($user_id, '_inid_signals', [
+                'phone_verified_since' => sanitize_text_field((string) ($c['inid_signals']['phone_verified_since'] ?? '')),
+                'completed_purchases' => (int) ($c['inid_signals']['completed_purchases'] ?? 0),
+                'strong_login' => !empty($c['inid_signals']['strong_login']),
+            ]);
+        }
         // Only when the store asks for them in InID
         if (!empty($c['birthdate'])) {
             update_user_meta($user_id, 'billing_birthdate', sanitize_text_field($c['birthdate']));
@@ -114,6 +122,14 @@ class InID_Customers
         WC()->customer = new WC_Customer($user_id, true);
         $this->apply(WC()->customer, $c);
         WC()->customer->save();
+        // The store's own offer for who came back: its coupon, if it exists in WooCommerce
+        $code = sanitize_text_field((string) ($c['offer_code'] ?? ''));
+        if ($code !== '' && function_exists('wc_load_cart')) {
+            wc_load_cart();
+            if (WC()->cart && !WC()->cart->has_discount($code) && wc_get_coupon_id_by_code($code)) {
+                WC()->cart->apply_coupon($code);
+            }
+        }
     }
 
     /** The InID claims on a WooCommerce customer, billing and shipping, not saved yet */

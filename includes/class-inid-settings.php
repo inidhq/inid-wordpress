@@ -15,6 +15,7 @@ class InID_Settings
         'api_url' => '',
         // Where this server reaches InID's analytics (the store's funnel)
         'analytics_url' => '',
+        'merchant_url' => '',
         'publishable_key' => '',
         'secret_key' => '',
         'webhook_secret' => '',
@@ -42,6 +43,12 @@ class InID_Settings
         return rtrim($this->get('analytics_url') ?: $this->api_url(), '/');
     }
 
+    /** Where the store's own settings live in InID (its offer) */
+    public function merchant_url(): string
+    {
+        return rtrim($this->get('merchant_url') ?: $this->api_url(), '/');
+    }
+
     public function ready(): bool
     {
         return $this->get('publishable_key') !== '' && $this->get('secret_key') !== '';
@@ -52,7 +59,7 @@ class InID_Settings
         $clean = [];
         foreach (self::DEFAULTS as $key => $default) {
             $value = isset($values[$key]) ? trim(wp_unslash((string) $values[$key])) : $default;
-            $clean[$key] = in_array($key, ['public_url', 'api_url', 'analytics_url'], true) ? esc_url_raw($value) : sanitize_text_field($value);
+            $clean[$key] = in_array($key, ['public_url', 'api_url', 'analytics_url', 'merchant_url'], true) ? esc_url_raw($value) : sanitize_text_field($value);
         }
         // An empty secret field keeps the saved one (the form never shows secrets)
         foreach (['secret_key', 'webhook_secret'] as $secret) {

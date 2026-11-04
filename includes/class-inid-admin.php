@@ -40,6 +40,47 @@ class InID_Admin
             add_submenu_page('woocommerce', 'InID', 'InID', 'manage_woocommerce', 'inid', [$this, 'page']);
         });
         add_action('admin_post_inid_save', [$this, 'save']);
+        add_action('admin_post_inid_offer', [$this, 'save_offer']);
+        // Users → a column with what InID checked about each customer who came through it
+        add_filter('manage_users_columns', function ($columns) {
+            $columns['inid_signals'] = 'InID';
+            return $columns;
+        });
+        add_filter('manage_users_custom_column', [$this, 'signals_column'], 10, 3);
+    }
+
+    public function signals_column($output, string $column, int $user_id)
+    {
+        if ($column !== 'inid_signals') {
+            return $output;
+        }
+        $s = get_user_meta($user_id, '_inid_signals', true);
+        if (!is_array($s)) {
+            return '—';
+        }
+        $lines = [];
+        if (!empty($s['phone_verified_since'])) {
+            $lines[] = '✓ Celular verificado desde ' . esc_html(date_i18n('M Y', strtotime($s['phone_verified_since'] . '-01')));
+        }
+        $n = (int) ($s['completed_purchases'] ?? 0);
+        $lines[] = esc_html($n . ($n === 1 ? ' compra completada' : ' compras completadas') . ' con InID');
+        if (!empty($s['strong_login'])) {
+            $lines[] = 'Entra con Face ID o huella';
+        }
+        return '<span style="color:#3d5c00">' . implode('<br>', $lines) . '</span>';
+    }
+
+    // The store's own offer for buyers who left at its checkout: the store writes it
+    public function save_offer(): void
+    {
+        if (!current_user_can('manage_woocommerce') || !check_admin_referer('inid_offer')) {
+            wp_die('No autorizado');
+        }
+        $text = sanitize_text_field(wp_unslash($_POST['offer_text'] ?? ''));
+        $code = sanitize_text_field(wp_unslash($_POST['offer_code'] ?? ''));
+        $this->client->set_offer(isset($_POST['off']) || $text === '' ? null : array_filter(['text' => $text, 'code' => $code]));
+        wp_safe_redirect(admin_url('admin.php?page=inid&saved=1#recuperar'));
+        exit;
     }
 
     public function save(): void
@@ -57,6 +98,8 @@ class InID_Admin
         $s = $this->settings->all();
         $funnel = $this->settings->ready() ? $this->client->funnel(7) : null;
         $audience = $this->settings->ready() ? $this->client->audience(30) : null;
+        $account = $this->settings->ready() ? $this->client->account() : null;
+        $offer = ($account && !is_wp_error($account)) ? ($account['recoveryOffer'] ?? null) : null;
         $abandoned = $this->customers->abandoned();
         $webhook = rest_url('inid/v1/webhook');
         ?>
@@ -87,6 +130,23 @@ class InID_Admin
             <?php elseif ($this->settings->ready()) : ?>
                 <div class="notice notice-warning inline"><p>No se pudo leer el embudo de InID.</p></div>
             <?php endif; ?>
+
+            <h2 id="recuperar">Recuperar clientes</h2>
+            <?php $shown = (int) ($funnel['totals']['offer_shown'] ?? 0); $back = (int) ($funnel['totals']['recovered'] ?? 0); ?>
+            <div style="display:flex;gap:16px;margin:8px 0 14px;flex-wrap:wrap">
+                <div class="card" style="margin:0;padding:12px 16px;max-width:none"><p style="margin:0">Vieron tu oferta al volver (7 días)</p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($shown); ?></strong></p></div>
+                <div class="card" style="margin:0;padding:12px 16px;max-width:none;border-color:#111113;background:#f7ffe6"><p style="margin:0">Volvieron y compraron</p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($back); ?></strong></p></div>
+            </div>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="card" style="max-width:720px">
+                <input type="hidden" name="action" value="inid_offer">
+                <?php wp_nonce_field('inid_offer'); ?>
+                <h3 style="margin-top:0">Tu oferta para quienes se fueron sin comprar</h3>
+                <p>La escribes tú. InID se la muestra a los compradores que vieron tu checkout y no compraron, cuando vuelven (hasta 14 días). Si pones un cupón de WooCommerce, se aplica solo. No sabes quiénes son hasta que compran.</p>
+                <p><label>Oferta<br><input class="regular-text" name="offer_text" maxlength="120" placeholder="10 % en tu primera compra" value="<?php echo esc_attr($offer['text'] ?? ''); ?>"></label></p>
+                <p><label>Código de cupón de WooCommerce (opcional)<br><input class="regular-text" name="offer_code" maxlength="30" placeholder="VUELVE10" value="<?php echo esc_attr($offer['code'] ?? ''); ?>"></label></p>
+                <p><button class="button button-primary"><?php echo $offer ? 'Guardar cambios' : 'Activar oferta'; ?></button>
+                <?php if ($offer) : ?> <button class="button" name="off" value="1">Desactivar</button><?php endif; ?></p>
+            </form>
 
             <h2>Audiencia · últimos 30 días</h2>
             <p style="max-width:720px">Compradores con InID que visitaron la tienda, en totales y porcentajes: nunca quién es cada uno ni en qué otras tiendas compra. Los grupos pequeños se juntan en "Otros". Solo cuentan quienes aceptaron estadísticas anónimas y donde el navegador deja reconocerlos (Chrome y Android).</p>
