@@ -44,6 +44,16 @@ class InID_Client
         return $this->decode($response);
     }
 
+    /** The store's audience: totals and shares of the buyers with InID who visited it */
+    public function audience(int $days = 30)
+    {
+        $response = wp_remote_get($this->settings->analytics_url() . '/v1/audience?days=' . $days, [
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
+            'timeout' => 8,
+        ]);
+        return $this->decode($response);
+    }
+
     /** InID-Signature: t=<seconds>,v1=<HMAC-SHA256 of "t.body"> with the webhook secret. */
     public function verify_webhook(string $raw_body, string $header): bool
     {

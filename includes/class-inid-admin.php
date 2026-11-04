@@ -56,6 +56,7 @@ class InID_Admin
     {
         $s = $this->settings->all();
         $funnel = $this->settings->ready() ? $this->client->funnel(7) : null;
+        $audience = $this->settings->ready() ? $this->client->audience(30) : null;
         $abandoned = $this->customers->abandoned();
         $webhook = rest_url('inid/v1/webhook');
         ?>
@@ -85,6 +86,47 @@ class InID_Admin
                 </table>
             <?php elseif ($this->settings->ready()) : ?>
                 <div class="notice notice-warning inline"><p>No se pudo leer el embudo de InID.</p></div>
+            <?php endif; ?>
+
+            <h2>Audiencia · últimos 30 días</h2>
+            <p style="max-width:720px">Compradores con InID que visitaron la tienda, en totales y porcentajes: nunca quién es cada uno ni en qué otras tiendas compra. Los grupos pequeños se juntan en "Otros". Solo cuentan quienes aceptaron estadísticas anónimas y donde el navegador deja reconocerlos (Chrome y Android).</p>
+            <?php if ($audience && !is_wp_error($audience) && !empty($audience['enough'])) : ?>
+                <div style="display:flex;gap:16px;margin:8px 0 14px;flex-wrap:wrap">
+                    <div class="card" style="margin:0;padding:12px 16px;max-width:none"><p style="margin:0">Visitantes con InID</p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($audience['visitors']); ?></strong></p></div>
+                    <div class="card" style="margin:0;padding:12px 16px;max-width:none;border-color:#111113;background:#f7ffe6"><p style="margin:0">Clientes potenciales (aún no te compran)</p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($audience['potential']); ?></strong></p></div>
+                    <div class="card" style="margin:0;padding:12px 16px;max-width:none"><p style="margin:0">De ellos, compran en línea seguido</p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($audience['activeBuyers'] === null ? '—' : $audience['activeBuyers'] . ' %'); ?></strong></p></div>
+                </div>
+                <?php
+                $blocks = [
+                    'Dónde viven tus clientes potenciales' => $audience['where']['potential'] ?? null,
+                    'Dónde viven tus clientes' => $audience['where']['customers'] ?? null,
+                    'Ciudades' => $audience['cities'] ?? null,
+                    'Desde qué dispositivo' => $audience['devices'] ?? null,
+                    'Qué días visitan' => $audience['weekdays'] ?? null,
+                ];
+                if (!empty($audience['leaving'])) {
+                    $blocks['Vieron el checkout y se fueron sin comprar: ' . $audience['leaving']['left'] . ' % (de ' . $audience['leaving']['sawForm'] . ')'] = $audience['leaving']['where'];
+                }
+                ?>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;max-width:1000px">
+                    <?php foreach ($blocks as $title => $rows) : ?>
+                        <div class="card" style="margin:0;max-width:none">
+                            <h3 style="margin-top:0"><?php echo esc_html($title); ?></h3>
+                            <?php if (!$rows) : ?><p>Aún muy pocos para mostrarlo sin exponer a nadie.</p><?php endif; ?>
+                            <?php foreach ((array) $rows as $r) : $other = $r['label'] === 'Otros'; ?>
+                                <div style="display:grid;grid-template-columns:140px 1fr 44px;gap:10px;align-items:center;padding:4px 0;<?php echo $other ? 'color:#646970' : ''; ?>">
+                                    <span><?php echo esc_html($r['label']); ?></span>
+                                    <div style="background:#f0f0f1;height:10px;border-radius:5px"><div style="background:<?php echo $other ? '#b5b8bc' : '#111113'; ?>;height:10px;border-radius:5px;width:<?php echo esc_attr((int) $r['share']); ?>%"></div></div>
+                                    <strong style="text-align:right"><?php echo esc_html($r['share']); ?> %</strong>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php elseif ($audience && !is_wp_error($audience)) : ?>
+                <div class="notice notice-info inline"><p>Aún no hay suficientes visitantes con InID para mostrar cifras sin exponer a nadie (mínimo <?php echo esc_html($audience['min'] ?? 10); ?>).</p></div>
+            <?php elseif ($this->settings->ready()) : ?>
+                <div class="notice notice-warning inline"><p>No se pudo leer la audiencia de InID.</p></div>
             <?php endif; ?>
 
             <h2>Checkouts sin terminar</h2>
