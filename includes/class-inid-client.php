@@ -82,6 +82,16 @@ class InID_Client
         return $this->post('/v1/catalog/prices', ['items' => $items]);
     }
 
+    // "Avísame": what a cart had (products, quantities, the offer's code), to rebuild it
+    public function cart(string $watch_id)
+    {
+        $response = wp_remote_get($this->settings->api_url() . '/v1/carts/' . rawurlencode($watch_id), [
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
+            'timeout' => 5,
+        ]);
+        return $this->decode($response);
+    }
+
     public function verify_webhook(string $raw_body, string $header): bool
     {
         $secret = $this->settings->get('webhook_secret');

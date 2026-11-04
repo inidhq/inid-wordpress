@@ -5,7 +5,8 @@ defined('ABSPATH') || exit;
  * "Avísame": on the cart and checkout, the cart goes in the page (product ids, names,
  * prices) so InID's greeting can offer to watch it; when a product's price is saved, InID
  * hears it and writes once to the buyers whose watched cart got cheaper. The store never
- * learns who asked until they buy.
+ * learns who asked until they buy. The message's link comes back with ?inid_cart=…: the
+ * cart is rebuilt here on whatever device opened it, with the offer's coupon.
  */
 class InID_Notices
 {
@@ -32,6 +33,42 @@ class InID_Notices
         add_action('woocommerce_update_product_variation', [$this, 'price_saved']);
         add_action('shutdown', [$this, 'send']);
         add_action('admin_notices', [$this, 'news']);
+        add_action('wp_loaded', [$this, 'restore'], 20);
+    }
+
+    // Back from the message: the products added to this browser's cart (what's already in
+    // it stays, nothing is doubled), the coupon applied, straight to the checkout
+    public function restore(): void
+    {
+        $watch_id = isset($_GET['inid_cart']) ? sanitize_text_field(wp_unslash($_GET['inid_cart'])) : '';
+        if (!$watch_id || is_admin() || wp_doing_ajax() || !preg_match('/^wch_[A-Za-z0-9_-]{10,40}$/', $watch_id) || !WC()->cart) {
+            return;
+        }
+        $cart = $this->client->cart($watch_id);
+        if (!is_wp_error($cart)) {
+            $in_cart = [];
+            foreach (WC()->cart->get_cart() as $line) {
+                $in_cart[] = (int) ($line['variation_id'] ?: $line['product_id']);
+            }
+            foreach ((array) ($cart['items'] ?? []) as $item) {
+                $product = wc_get_product((int) ($item['id'] ?? 0));
+                if (!$product || !$product->is_purchasable() || in_array($product->get_id(), $in_cart, true)) {
+                    continue;
+                }
+                $quantity = max(1, (int) ($item['quantity'] ?? 1));
+                if ($product->is_type('variation')) {
+                    WC()->cart->add_to_cart($product->get_parent_id(), $quantity, $product->get_id(), $product->get_variation_attributes());
+                } else {
+                    WC()->cart->add_to_cart($product->get_id(), $quantity);
+                }
+            }
+            $code = (string) ($cart['offer_code'] ?? '');
+            if ($code && wc_get_coupon_id_by_code($code) && !WC()->cart->has_discount($code)) {
+                WC()->cart->apply_coupon($code);
+            }
+        }
+        wp_safe_redirect(WC()->cart->is_empty() ? remove_query_arg('inid_cart') : wc_get_checkout_url());
+        exit;
     }
 
     // After saving a cheaper price: how many watched carts InID will write to
