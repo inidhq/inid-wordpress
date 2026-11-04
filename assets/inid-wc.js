@@ -19,6 +19,12 @@ document.addEventListener("inid:signedin", (event) => {
   if (apiFetch && apiFetch.setNonce && event.detail.store_api_nonce) {
     apiFetch.setNonce({ Nonce: event.detail.store_api_nonce, "Nonce-Timestamp": String(Math.floor(Date.now() / 1000)) });
   }
+  // The block checkout, logged in with the data in the session, shows it as WooCommerce's
+  // own summary card (with "Editar") instead of a filled form: one reload gets there
+  if (document.querySelector(".wp-block-woocommerce-checkout, .wc-block-checkout")) {
+    setTimeout(() => window.location.reload(), 600);
+    return;
+  }
   const data = window.wp && window.wp.data;
   if (data && data.select("wc/store/cart")) data.dispatch("wc/store/cart").invalidateResolutionForStore();
 });

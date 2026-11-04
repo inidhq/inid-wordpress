@@ -2,7 +2,7 @@
 /**
  * Plugin Name: InID — Registro en un toque
  * Description: Tus clientes se registran y llenan el checkout con InID: un toque y su huella o un código por WhatsApp. Sin formularios.
- * Version: 0.1.1
+ * Version: 0.1.2
  * Requires at least: 6.3
  * Requires PHP: 7.4
  * Requires Plugins: woocommerce
@@ -11,7 +11,7 @@
 
 defined('ABSPATH') || exit;
 
-define('INID_VERSION', '0.1.1');
+define('INID_VERSION', '0.1.2');
 define('INID_DIR', __DIR__);
 define('INID_URL', plugin_dir_url(__FILE__));
 
