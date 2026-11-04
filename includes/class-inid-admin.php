@@ -148,6 +148,21 @@ class InID_Admin
                 <?php if ($offer) : ?> <button class="button" name="off" value="1">Desactivar</button><?php endif; ?></p>
             </form>
 
+            <h2 id="avisos">Avísame · últimos 7 días</h2>
+            <p style="max-width:720px">Compradores que no compraron todavía y pidieron que InID les avisara si su carrito baja de precio o pones una oferta. InID les escribe una sola vez: cuando guardas un producto con un precio menor, o cuando activas una oferta arriba. No sabes quiénes son hasta que compran.</p>
+            <?php
+            $notice_kpis = ['watch_created' => 'Pidieron aviso', 'notice_sent' => 'Les escribimos', 'notice_opened' => 'Volvieron', 'notice_bought' => 'Compraron', 'notice_stopped' => 'Dejaron de recibir'];
+            $sent = (int) ($funnel['totals']['notice_sent'] ?? 0);
+            ?>
+            <div style="display:flex;gap:16px;margin:8px 0 14px;flex-wrap:wrap">
+                <?php foreach ($notice_kpis as $key => $label) : ?>
+                    <div class="card" style="margin:0;padding:12px 16px;max-width:none<?php echo $key === 'notice_bought' ? ';border-color:#111113;background:#f7ffe6' : ''; ?>"><p style="margin:0"><?php echo esc_html($label); ?></p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html((int) ($funnel['totals'][$key] ?? 0)); ?></strong></p></div>
+                <?php endforeach; ?>
+            </div>
+            <?php if ($sent >= 20 && ((int) ($funnel['totals']['notice_stopped'] ?? 0)) / $sent >= 0.1) : ?>
+                <div class="notice notice-warning inline"><p>Muchos compradores apagaron tus avisos: InID los pausó para cuidar que sigan llegando. Revisa tus ofertas y precios.</p></div>
+            <?php endif; ?>
+
             <h2>Audiencia · últimos 30 días</h2>
             <p style="max-width:720px">Compradores con InID que visitaron la tienda, en totales y porcentajes: nunca quién es cada uno ni en qué otras tiendas compra. Los grupos pequeños se juntan en "Otros". Solo cuentan quienes aceptaron estadísticas anónimas y donde el navegador deja reconocerlos (Chrome y Android).</p>
             <?php if ($audience && !is_wp_error($audience) && !empty($audience['enough'])) : ?>

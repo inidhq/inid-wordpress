@@ -76,6 +76,12 @@ class InID_Client
     }
 
     /** InID-Signature: t=<seconds>,v1=<HMAC-SHA256 of "t.body"> with the webhook secret. */
+    // "Avísame": new prices of the store's products; InID answers how many watched carts got cheaper
+    public function prices(array $items)
+    {
+        return $this->post('/v1/catalog/prices', ['items' => $items]);
+    }
+
     public function verify_webhook(string $raw_body, string $header): bool
     {
         $secret = $this->settings->get('webhook_secret');
