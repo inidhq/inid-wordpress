@@ -87,6 +87,13 @@ class InID_Customers
             update_user_meta($user_id, 'billing_document_type', sanitize_text_field($c['national_id']['type'] ?? 'CC'));
             update_user_meta($user_id, 'billing_document', sanitize_text_field($c['national_id']['number']));
         }
+        // Only when the store asks for them in InID
+        if (!empty($c['birthdate'])) {
+            update_user_meta($user_id, 'billing_birthdate', sanitize_text_field($c['birthdate']));
+        }
+        if (!empty($c['nationality'])) {
+            update_user_meta($user_id, 'billing_nationality', sanitize_text_field($c['nationality']));
+        }
     }
 
     /**
