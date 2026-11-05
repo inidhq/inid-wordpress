@@ -26,12 +26,15 @@ class InID_Admin
     private $client;
     /** @var InID_Customers */
     private $customers;
+    /** @var InID_Domain */
+    private $domain;
 
-    public function __construct(InID_Settings $settings, InID_Client $client, InID_Customers $customers)
+    public function __construct(InID_Settings $settings, InID_Client $client, InID_Customers $customers, InID_Domain $domain)
     {
         $this->settings = $settings;
         $this->client = $client;
         $this->customers = $customers;
+        $this->domain = $domain;
     }
 
     public function register(): void
@@ -89,6 +92,7 @@ class InID_Admin
             wp_die('No autorizado');
         }
         $this->settings->save($_POST['inid'] ?? []);
+        $this->domain->prove();
         wp_safe_redirect(admin_url('admin.php?page=inid&saved=1'));
         exit;
     }
@@ -100,6 +104,7 @@ class InID_Admin
         $audience = $this->settings->ready() ? $this->client->audience(30) : null;
         $account = $this->settings->ready() ? $this->client->account() : null;
         $offer = ($account && !is_wp_error($account)) ? ($account['recoveryOffer'] ?? null) : null;
+        $unverified = $this->domain->pending($account);
         $insights = $this->settings->ready() ? $this->client->insights(isset($_GET['fresh'])) : null;
         $abandoned = $this->customers->abandoned();
         $webhook = rest_url('inid/v1/webhook');
@@ -107,6 +112,9 @@ class InID_Admin
         <div class="wrap">
             <h1><svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true" style="vertical-align:-7px;margin-right:8px"><rect width="100" height="100" rx="23" fill="#111113"/><rect x="24" y="50" width="20" height="20" rx="3" fill="#fff"/><rect x="56" y="30" width="20" height="20" rx="3" fill="#c6ff3d"/></svg>InID · Registro en un toque</h1>
             <?php if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Guardado.</p></div><?php endif; ?>
+            <?php if ($unverified) : ?>
+                <div class="notice notice-warning"><p><strong>Tu llave live aún no funciona en <?php echo esc_html(implode(', ', $unverified)); ?>.</strong> Este plugin publica la prueba en <code><?php echo esc_html(home_url(InID_Domain::PATH)); ?></code> y le pide a InID que la revise. Si tu servidor no deja llegar esa dirección a WordPress, verifica con un registro DNS desde el <a href="https://panel.inid.co/" target="_blank" rel="noopener">panel de InID</a>.</p></div>
+            <?php endif; ?>
 
             <?php if ($insights && !is_wp_error($insights)) : ?>
                 <h2>Tu semana</h2>

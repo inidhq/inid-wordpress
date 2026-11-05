@@ -85,6 +85,16 @@ class InID_Client
         return $this->decode($response);
     }
 
+    /** Asks InID to look for the store's proof on its domains (see InID_Domain) */
+    public function verify_domains()
+    {
+        $response = wp_remote_post($this->settings->merchant_url() . '/v1/domains/verify', [
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
+            'timeout' => 15,
+        ]);
+        return $this->decode($response);
+    }
+
     /** InID-Signature: t=<seconds>,v1=<HMAC-SHA256 of "t.body"> with the webhook secret. */
     // "Avísame": new prices of the store's products; InID answers how many watched carts got cheaper
     public function prices(array $items)
