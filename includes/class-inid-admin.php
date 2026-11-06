@@ -82,7 +82,7 @@ class InID_Admin
         $text = sanitize_text_field(wp_unslash($_POST['offer_text'] ?? ''));
         $code = sanitize_text_field(wp_unslash($_POST['offer_code'] ?? ''));
         $this->client->set_offer(isset($_POST['off']) || $text === '' ? null : array_filter(['text' => $text, 'code' => $code]));
-        wp_safe_redirect(admin_url('admin.php?page=inid&saved=1#recuperar'));
+        wp_safe_redirect(admin_url('admin.php?page=inid&saved=1#recover'));
         exit;
     }
 
@@ -153,7 +153,7 @@ class InID_Admin
                 <div class="notice notice-warning inline"><p>No se pudo leer el embudo de InID.</p></div>
             <?php endif; ?>
 
-            <h2 id="recuperar">Recuperar clientes</h2>
+            <h2 id="recover">Recuperar clientes</h2>
             <?php $shown = (int) ($funnel['totals']['offer_shown'] ?? 0); $back = (int) ($funnel['totals']['recovered'] ?? 0); ?>
             <div style="display:flex;gap:16px;margin:8px 0 14px;flex-wrap:wrap">
                 <div class="card" style="margin:0;padding:12px 16px;max-width:none"><p style="margin:0">Vieron tu oferta al volver (7 días)</p><p style="font-size:24px;margin:4px 0 0"><strong><?php echo esc_html($shown); ?></strong></p></div>
