@@ -95,7 +95,9 @@ class InID_Pixel
                     'line' => $customer->get_billing_address_1(),
                     'details' => $customer->get_billing_address_2(),
                     'city' => $customer->get_billing_city(),
-                    'department' => $customer->get_billing_state(),
+                    'region' => InID_Customers::state_name($customer->get_billing_country(), $customer->get_billing_state()),
+                    'country' => $customer->get_billing_country(),
+                    'postalCode' => $customer->get_billing_postcode(),
                 ]),
             ]),
         ]);

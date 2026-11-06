@@ -135,8 +135,11 @@ class InID_Customers
     /** The InID claims on a WooCommerce customer, billing and shipping, not saved yet */
     private function apply(WC_Customer $customer, array $c): void
     {
-        $phone = preg_replace('/^\+57/', '', (string) ($c['phone_number'] ?? ''));
+        // As people write it in the store's country when it's from there, else with its code
+        $phone = (string) ($c['phone_local'] ?? $c['phone_number'] ?? '');
         $address = (array) ($c['address'] ?? []);
+        // Addresses from before InID said their country are Colombian
+        $country = strtoupper((string) ($address['country'] ?? ($address ? 'CO' : '')));
         foreach (['billing', 'shipping'] as $type) {
             $set = function ($field, $value) use ($customer, $type) {
                 $method = "set_{$type}_{$field}";
@@ -150,33 +153,50 @@ class InID_Customers
             $set('address_1', $address['line'] ?? '');
             $set('address_2', trim(($address['details'] ?? '') . (empty($address['neighborhood']) ? '' : ', ' . $address['neighborhood']), ', '));
             $set('city', $address['city'] ?? '');
-            $set('state', self::state_code((string) ($address['department'] ?? '')));
-            $set('country', 'CO');
+            $set('country', $country);
+            $set('state', self::state_code($country, (string) ($address['region'] ?? $address['department'] ?? '')));
         }
         if (!empty($c['email']) && !$customer->get_billing_email() && !email_exists($c['email'])) {
             $customer->set_billing_email(sanitize_email($c['email']));
         }
     }
 
-    /** WooCommerce keeps Colombian departments by their ISO code ("CO-DC" for Bogotá). */
-    public static function state_code(string $department): string
+    /**
+     * WooCommerce keeps a country's states by its own code ("CO-DC" for Bogotá, "JA" for
+     * Jalisco): the one whose name or code is the region InID shares, else the name itself.
+     */
+    public static function state_code(string $country, string $region): string
     {
-        if ($department === '') {
-            return '';
+        if ($region === '' || $country === '' || !function_exists('WC')) {
+            return $region;
         }
-        $wanted = strtolower(remove_accents($department));
-        if (preg_match('/bogota|capital district|distrito capital/', $wanted)) {
-            return 'CO-DC';
-        }
-        if (strpos($wanted, 'san andres') !== false) {
-            return 'CO-SAP';
-        }
-        foreach ((array) WC()->countries->get_states('CO') as $code => $name) {
-            if (strtolower(remove_accents($name)) === $wanted || strtolower($code) === $wanted) {
-                return $code;
+        $wanted = strtolower(remove_accents($region));
+        $states = (array) WC()->countries->get_states($country);
+        // Colombia's departments go by other names too
+        if ($country === 'CO') {
+            if (preg_match('/bogota|capital district|distrito capital/', $wanted)) {
+                $wanted = 'co-dc';
+            } elseif (strpos($wanted, 'san andres') !== false) {
+                $wanted = 'co-sap';
             }
         }
-        return $department;
+        foreach ($states as $code => $name) {
+            $key = strtolower((string) $code);
+            if (strtolower(remove_accents((string) $name)) === $wanted || $key === $wanted || $key === strtolower($country) . '-' . $wanted) {
+                return (string) $code;
+            }
+        }
+        return $region;
+    }
+
+    /** The other way: a WooCommerce state code as its name ("CO-DC" → "Bogotá D.C."), for InID */
+    public static function state_name(string $country, string $state): string
+    {
+        if ($state === '' || $country === '' || !function_exists('WC')) {
+            return $state;
+        }
+        $states = (array) WC()->countries->get_states($country);
+        return isset($states[$state]) ? html_entity_decode((string) $states[$state]) : $state;
     }
 
     public function record_abandoned(array $c): void
