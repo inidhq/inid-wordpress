@@ -37,6 +37,7 @@ class InID_Pixel
         }
         wp_enqueue_script('inid-pixel', rtrim($this->settings->get('public_url'), '/') . '/p.js', [], null, ['in_footer' => true, 'strategy' => 'async']);
         wp_enqueue_script('inid-wc', INID_URL . 'assets/inid-wc.js', [], INID_VERSION, ['in_footer' => true]);
+        InID_Consent::enqueue();
         wp_localize_script('inid-wc', 'inidWc', [
             'login' => esc_url_raw(rest_url('inid/v1/login')),
             'nonce' => wp_create_nonce('wp_rest'),
@@ -49,7 +50,7 @@ class InID_Pixel
         if ($handle !== 'inid-pixel') {
             return $tag;
         }
-        $attrs = ' data-key="' . esc_attr($this->settings->get('publishable_key')) . '"';
+        $attrs = ' data-key="' . esc_attr($this->settings->get('publishable_key')) . '"' . InID_Consent::attrs();
         // One-click sign in / sign up: the pixel sends the token here and follows the redirect
         $attrs .= ' data-signin="' . esc_url(rest_url('inid/v1/login')) . '"';
         $invite = $this->invitation();

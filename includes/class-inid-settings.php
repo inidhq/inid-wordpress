@@ -10,7 +10,7 @@ class InID_Settings
 
     const DEFAULTS = [
         // Where the buyer's browser loads InID from
-        'public_url' => 'https://inid.co',
+        'public_url' => 'https://id.inid.co',
         // Where this server reaches InID (differs only in local Docker setups)
         'api_url' => '',
         // Where this server reaches InID's analytics (the store's funnel)
