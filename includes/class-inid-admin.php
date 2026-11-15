@@ -28,9 +28,12 @@ class InID_Admin
     private $customers;
     /** @var InID_Domain */
     private $domain;
+    /** @var InID_Connect */
+    private $connect;
 
-    public function __construct(InID_Settings $settings, InID_Client $client, InID_Customers $customers, InID_Domain $domain)
+    public function __construct(InID_Settings $settings, InID_Client $client, InID_Customers $customers, InID_Domain $domain, InID_Connect $connect)
     {
+        $this->connect = $connect;
         $this->settings = $settings;
         $this->client = $client;
         $this->customers = $customers;
@@ -112,8 +115,9 @@ class InID_Admin
         <div class="wrap">
             <h1><svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true" style="vertical-align:-7px;margin-right:8px"><rect width="100" height="100" rx="23" fill="#111113"/><rect x="24" y="50" width="20" height="20" rx="3" fill="#fff"/><rect x="56" y="30" width="20" height="20" rx="3" fill="#c6ff3d"/></svg>InID · Registro en un toque</h1>
             <?php if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Guardado.</p></div><?php endif; ?>
+            <?php $this->connect->card(); ?>
             <?php if ($unverified) : ?>
-                <div class="notice notice-warning"><p><strong>Tu llave live aún no funciona en <?php echo esc_html(implode(', ', $unverified)); ?>.</strong> Este plugin publica la prueba en <code><?php echo esc_html(home_url(InID_Domain::PATH)); ?></code> y le pide a InID que la revise. Si tu servidor no deja llegar esa dirección a WordPress, verifica con un registro DNS desde el <a href="https://panel.inid.co/" target="_blank" rel="noopener">panel de InID</a>.</p></div>
+                <div class="notice notice-warning"><p><strong>Tu llave live aún no funciona en <?php echo esc_html(implode(', ', $unverified)); ?>.</strong> Este plugin publica la prueba en <code><?php echo esc_html(home_url(InID_Domain::PATH)); ?></code> y le pide a InID que la revise. Si tu servidor no deja llegar esa dirección a WordPress, verifica con un registro DNS desde el <a href="<?php echo esc_url($this->settings->panel_url() . '/'); ?>" target="_blank" rel="noopener">panel de InID</a>.</p></div>
             <?php endif; ?>
 
             <?php if ($insights && !is_wp_error($insights)) : ?>
@@ -239,6 +243,7 @@ class InID_Admin
             </table>
 
             <h2>Conexión</h2>
+            <p style="max-width:720px"><?php echo $this->settings->ready() ? 'Las llaves de esta tienda ya están guardadas. Cámbialas solo si las rotaste en el panel de InID.' : 'Con "Conectar con InID", arriba, no hace falta llenar nada de esto. Úsalo solo si prefieres pegar las llaves del panel a mano.'; ?></p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="inid_save">
                 <?php wp_nonce_field('inid_save'); ?>

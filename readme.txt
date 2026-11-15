@@ -2,19 +2,22 @@
 Requires at least: 6.3
 Requires PHP: 7.4
 WC requires at least: 8.0
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 
 Mapa de calor y visitantes en vivo para cualquier sitio de WordPress. Con WooCommerce, además, tus clientes se registran y llenan el checkout con InID: un toque y su huella o un código por WhatsApp.
 
 == Sin WooCommerce ==
 1. Sube la carpeta `inid` a `wp-content/plugins/` y actívala.
-2. Ajustes → InID: pega la llave pública del panel de InID.
+2. Ajustes → InID: **Conectar con InID**. El sitio prueba que el dominio es suyo y recibe su llave; no hay nada que copiar. Luego, **Abrir el panel de InID** para ver el mapa de calor y En vivo.
 3. El mapa de calor, En vivo y el seguimiento de visitas necesitan que el visitante acepte las cookies de estadísticas, y pedirlo es responsabilidad del sitio. Con un aviso compatible con la WP Consent API (Complianz, CookieYes, Cookiebot y otros), InID espera la respuesta del visitante solo. Sin aviso, cuenta a todos.
 
 == Con WooCommerce ==
 1. Sube la carpeta `inid` a `wp-content/plugins/` y actívala.
-2. WooCommerce → InID: pega la llave pública, la llave secreta y el secreto del webhook.
-3. En InID, registra el dominio de la tienda y la URL del webhook que muestra esa pantalla.
+2. WooCommerce → InID: **Conectar con InID**. La tienda prueba que el dominio es suyo y recibe sus llaves, con su dirección y su webhook ya registrados en InID; no hay nada que copiar.
+
+Si ya creaste tu tienda en el panel de InID, usa **Ya tengo una tienda en InID**: eliges cuál en el panel y el sitio queda conectado a ella.
+
+Al conectar, el sitio le envía a InID su nombre, su dirección y el correo del administrador. Un sitio sin HTTPS o que no es público (local, intranet) no puede conectarse así: pega las llaves del panel de InID en la misma pantalla.
 
 == Qué hace ==
 * Pone el pixel de InID en la tienda: reconoce el checkout y el registro sin tocar el tema.

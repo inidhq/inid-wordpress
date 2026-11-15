@@ -7,6 +7,7 @@ defined('ABSPATH') || exit;
 class InID_Settings
 {
     const OPTION = 'inid_settings';
+    const PANEL = 'https://panel.inid.co';
 
     const DEFAULTS = [
         // Where the buyer's browser loads InID from
@@ -40,13 +41,27 @@ class InID_Settings
 
     public function analytics_url(): string
     {
-        return rtrim($this->get('analytics_url') ?: $this->api_url(), '/');
+        if ($this->get('analytics_url') !== '') {
+            return rtrim($this->get('analytics_url'), '/');
+        }
+        // InID itself serves the store's numbers next to its panel
+        return rtrim($this->get('public_url'), '/') === self::DEFAULTS['public_url'] ? self::PANEL : $this->api_url();
     }
 
-    /** Where the store's own settings live in InID (its offer) */
+    /** Where the store's own settings live in InID (its account, domains, offer; connecting) */
     public function merchant_url(): string
     {
-        return rtrim($this->get('merchant_url') ?: $this->api_url(), '/');
+        if ($this->get('merchant_url') !== '') {
+            return rtrim($this->get('merchant_url'), '/');
+        }
+        // InID itself serves them next to its panel; another InID (local), at its own address
+        return rtrim($this->get('public_url'), '/') === self::DEFAULTS['public_url'] ? self::PANEL : $this->api_url();
+    }
+
+    /** Where the people who run the store manage it */
+    public function panel_url(): string
+    {
+        return rtrim((string) apply_filters('inid_panel_url', self::PANEL), '/');
     }
 
     public function ready(): bool

@@ -85,11 +85,35 @@ class InID_Client
         return $this->decode($response);
     }
 
+    /** This site proves its domain and gets its store's keys, with no key yet (see InID_Connect) */
+    public function connect(array $body)
+    {
+        $response = wp_remote_post($this->settings->merchant_url() . '/v1/connect', [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body' => wp_json_encode($body),
+            // InID reads this site's proof before it answers
+            'timeout' => 20,
+        ]);
+        return $this->decode($response);
+    }
+
+    /** A link that signs the person in to the panel, at this store */
+    public function panel_link()
+    {
+        $response = wp_remote_post($this->settings->merchant_url() . '/v1/panel-link', [
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key'), 'Content-Type' => 'application/json'],
+            'body' => '{}',
+            'timeout' => 8,
+        ]);
+        return $this->decode($response);
+    }
+
     /** Asks InID to look for the store's proof on its domains (see InID_Domain) */
     public function verify_domains()
     {
         $response = wp_remote_post($this->settings->merchant_url() . '/v1/domains/verify', [
-            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key'), 'Content-Type' => 'application/json'],
+            'body' => '{}',
             'timeout' => 15,
         ]);
         return $this->decode($response);
