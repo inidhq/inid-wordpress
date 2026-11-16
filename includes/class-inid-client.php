@@ -119,7 +119,7 @@ class InID_Client
     /** The store's offer for buyers who left at its checkout (null turns it off) */
     public function account()
     {
-        $response = wp_remote_get($this->settings->merchant_url() . '/v1/account', [
+        $response = wp_remote_get($this->settings->organization_url() . '/v1/account', [
             'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
             'timeout' => 8,
         ]);
@@ -128,7 +128,7 @@ class InID_Client
 
     public function set_offer(?array $offer)
     {
-        $response = wp_remote_request($this->settings->merchant_url() . '/v1/offer', [
+        $response = wp_remote_request($this->settings->organization_url() . '/v1/offer', [
             'method' => $offer ? 'PUT' : 'DELETE',
             'headers' => array_merge(['Authorization' => 'Bearer ' . $this->settings->get('secret_key')], $offer ? ['Content-Type' => 'application/json'] : []),
             'body' => $offer ? wp_json_encode($offer) : null,
@@ -140,7 +140,7 @@ class InID_Client
     /** This site proves its domain and gets its organization's keys, with no key yet (see InID_Connect) */
     public function connect(array $body)
     {
-        $response = wp_remote_post($this->settings->merchant_url() . '/v1/connect', [
+        $response = wp_remote_post($this->settings->organization_url() . '/v1/connect', [
             'headers' => ['Content-Type' => 'application/json'],
             'body' => wp_json_encode($body),
             // InID reads this site's proof before it answers
@@ -152,7 +152,7 @@ class InID_Client
     /** A link that signs the person in to the panel, at this organization */
     public function panel_link()
     {
-        $response = wp_remote_post($this->settings->merchant_url() . '/v1/panel-link', [
+        $response = wp_remote_post($this->settings->organization_url() . '/v1/panel-link', [
             'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key'), 'Content-Type' => 'application/json'],
             'body' => '{}',
             'timeout' => 8,
@@ -163,7 +163,7 @@ class InID_Client
     /** Asks InID to look for the organization's proof on its domains (see InID_Domain) */
     public function verify_domains()
     {
-        $response = wp_remote_post($this->settings->merchant_url() . '/v1/domains/verify', [
+        $response = wp_remote_post($this->settings->organization_url() . '/v1/domains/verify', [
             'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key'), 'Content-Type' => 'application/json'],
             'body' => '{}',
             'timeout' => 15,

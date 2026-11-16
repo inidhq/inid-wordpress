@@ -2,7 +2,7 @@
 Requires at least: 6.3
 Requires PHP: 7.4
 WC requires at least: 8.0
-Stable tag: 0.7.0
+Stable tag: 0.7.1
 
 Tus usuarios inician sesión con InID en cualquier WordPress, sin contraseñas: el formulario va dentro de la página de inicio de sesión, con roles y sesiones sincronizados. Además, mapa de calor y visitantes en vivo. Con WooCommerce, además, tus clientes se registran y llenan el checkout con InID: un toque y su huella o un código por WhatsApp.
 
@@ -28,6 +28,8 @@ Al conectar, el sitio le envía a InID su nombre, su dirección y el correo del 
 * Muestra el embudo (solo conteos) y los checkouts sin terminar.
 
 == Changelog ==
+= 0.7.1 =
+* El ajuste de la dirección de las organizaciones en InID se llama organization_url (el anterior, merchant_url, se sigue leyendo).
 = 0.7.0 =
 * Usuarios → Pasar a InID: invita a las cuentas que ya existen (por rol, con su rol en la app y un correo del sitio); se conectan la primera vez que entran con InID.
 * Conectar con InID desde el perfil y desde Mi cuenta; aviso a quien aún entra con contraseña.

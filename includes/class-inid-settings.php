@@ -16,7 +16,7 @@ class InID_Settings
         'api_url' => '',
         // Where this server reaches InID's analytics (the store's funnel)
         'analytics_url' => '',
-        'merchant_url' => '',
+        'organization_url' => '',
         'publishable_key' => '',
         'secret_key' => '',
         'webhook_secret' => '',
@@ -36,7 +36,12 @@ class InID_Settings
 
     public function all(): array
     {
-        return array_merge(self::DEFAULTS, (array) get_option(self::OPTION, []));
+        $all = array_merge(self::DEFAULTS, (array) get_option(self::OPTION, []));
+        // Saved before it was called organization_url (plugin 0.7 and older)
+        if ($all['organization_url'] === '' && !empty($all['merchant_url'])) {
+            $all['organization_url'] = (string) $all['merchant_url'];
+        }
+        return $all;
     }
 
     public function get(string $key): string
@@ -59,10 +64,10 @@ class InID_Settings
     }
 
     /** Where the organization's own settings live in InID (its account, domains, offer; connecting) */
-    public function merchant_url(): string
+    public function organization_url(): string
     {
-        if ($this->get('merchant_url') !== '') {
-            return rtrim($this->get('merchant_url'), '/');
+        if ($this->get('organization_url') !== '') {
+            return rtrim($this->get('organization_url'), '/');
         }
         // InID itself serves them next to its panel; another InID (local), at its own address
         return rtrim($this->get('public_url'), '/') === self::DEFAULTS['public_url'] ? self::PANEL : $this->api_url();
@@ -84,7 +89,7 @@ class InID_Settings
         $clean = [];
         foreach (self::DEFAULTS as $key => $default) {
             $value = isset($values[$key]) ? trim(wp_unslash((string) $values[$key])) : $default;
-            if (in_array($key, ['public_url', 'api_url', 'analytics_url', 'merchant_url'], true)) {
+            if (in_array($key, ['public_url', 'api_url', 'analytics_url', 'organization_url'], true)) {
                 $clean[$key] = esc_url_raw($value);
             } elseif (in_array($key, ['role_map', 'protected_routes'], true)) {
                 $clean[$key] = sanitize_textarea_field($value);

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: InID — Inicio de sesión sin contraseña
  * Description: Inicia sesión con InID en cualquier WordPress (roles y sesiones incluidos), mapa de calor y visitantes en vivo. Con WooCommerce, además, tus clientes se registran y llenan el checkout en un toque.
- * Version: 0.7.0
+ * Version: 0.7.1
  * Requires at least: 6.3
  * Requires PHP: 7.4
  * Text Domain: inid
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('INID_VERSION', '0.7.0');
+define('INID_VERSION', '0.7.1');
 define('INID_DIR', __DIR__);
 define('INID_URL', plugin_dir_url(__FILE__));
 
