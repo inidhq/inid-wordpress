@@ -26,6 +26,10 @@ class InID_Settings
         'signin_on_login' => 'yes',
         // InID roles → WordPress roles, one "admin=editor" per line
         'role_map' => '',
+        // The InID entrance wp-login.php uses ("team"; empty: the general one)
+        'entrance_login' => '',
+        // Pages only some roles see, one "/intranet = author, editor (team)" per line
+        'protected_routes' => '',
     ];
 
     public function all(): array
@@ -80,7 +84,7 @@ class InID_Settings
             $value = isset($values[$key]) ? trim(wp_unslash((string) $values[$key])) : $default;
             if (in_array($key, ['public_url', 'api_url', 'analytics_url', 'merchant_url'], true)) {
                 $clean[$key] = esc_url_raw($value);
-            } elseif ($key === 'role_map') {
+            } elseif (in_array($key, ['role_map', 'protected_routes'], true)) {
                 $clean[$key] = sanitize_textarea_field($value);
             } else {
                 $clean[$key] = sanitize_text_field($value);

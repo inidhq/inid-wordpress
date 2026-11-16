@@ -35,9 +35,12 @@ class InID_SignIn
         if ($this->settings->get('signin_on_login') === 'yes') {
             add_action('login_form', [$this, 'login_form']);
         }
-        add_shortcode('inid_signin', function () {
-            return is_user_logged_in() ? '' : $this->card(home_url(add_query_arg([])));
+        add_shortcode('inid_signin', function ($atts) {
+            $atts = shortcode_atts(['entrance' => ''], (array) $atts);
+            return is_user_logged_in() ? '' : $this->card(home_url(add_query_arg([])), (string) $atts['entrance']);
         });
+        // Pages only some roles see (their sign-in through the entrance they say)
+        add_action('template_redirect', [$this, 'guard_routes']);
         // The InID session this WordPress session came from, kept with it
         add_filter('attach_session_information', [$this, 'session_information'], 10, 2);
         // Signing out here ends it at InID too
@@ -57,17 +60,22 @@ class InID_SignIn
     public function login_form(): void
     {
         $back = isset($_REQUEST['redirect_to']) ? wp_unslash((string) $_REQUEST['redirect_to']) : admin_url();
+        // A protected page sends people here through its entrance; else the login's own
+        $entrance = isset($_GET['inid_entrance']) ? (string) wp_unslash($_GET['inid_entrance']) : $this->settings->get('entrance_login');
         $or = ['es' => 'o con tu usuario y contraseña', 'pt' => 'ou com seu usuário e senha'][substr(get_locale(), 0, 2)] ?? 'or with your username and password';
         // At the top of the form, then the divider, then WordPress's own fields
-        echo '<div class="inid-login">' . $this->card($back) // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped
+        echo '<div class="inid-login">' . $this->card($back, $entrance) // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped
             . '<p class="inid-or" style="display:flex;align-items:center;gap:10px;color:#6b6b76;font-size:13px;margin:4px 0 18px"><span style="flex:1;height:1px;background:#dcdcde"></span>' . esc_html($or) . '<span style="flex:1;height:1px;background:#dcdcde"></span></p></div>'
             . '<script>(function(){var b=document.querySelector(".inid-login"),f=document.getElementById("loginform");if(b&&f)f.insertBefore(b,f.firstChild);})();</script>';
     }
 
     /** InID's form in a frame; it says how tall it is, so nothing scrolls inside */
-    private function card(string $back): string
+    private function card(string $back, string $entrance = ''): string
     {
         $args = ['action' => 'inid', 'embed' => '1', 'redirect_to' => $back];
+        if (self::entrance_key($entrance) !== '') {
+            $args['entrance'] = self::entrance_key($entrance);
+        }
         // Back from Google: the form goes on where InID left it
         if (isset($_GET['inid_continue'])) {
             $args['continue'] = wp_unslash((string) $_GET['inid_continue']);
@@ -115,6 +123,11 @@ class InID_SignIn
             'code_challenge_method' => 'S256',
             'ui_locales' => substr(get_locale(), 0, 2),
         ];
+        // The door of the app this page chose: its rules, its role
+        $entrance = self::entrance_key(wp_unslash((string) ($_GET['entrance'] ?? '')));
+        if ($entrance !== '') {
+            $query['entrance'] = $entrance;
+        }
         // In the page, someone InID knows still clicks to go in (never just by loading it)
         if ($embed) {
             $query['display'] = 'embed';
@@ -265,6 +278,58 @@ class InID_SignIn
             $user->set_role(get_option('default_role', 'subscriber'));
         }
         delete_user_meta($user_id, 'inid_wp_role');
+    }
+
+    public static function entrance_key(string $key): string
+    {
+        $key = strtolower(trim($key));
+        return preg_match('/^[a-z][a-z0-9_-]{0,39}$/', $key) ? $key : '';
+    }
+
+    /** "/intranet = author, editor (team)" per line: [path, roles, entrance] */
+    public static function routes(string $text): array
+    {
+        $routes = [];
+        foreach (preg_split('/\r\n|\r|\n/', $text) as $line) {
+            if (!preg_match('#^\s*(/[^\s=]*)\s*=?\s*([^()]*?)\s*(?:\(\s*([a-z][a-z0-9_-]*)\s*\))?\s*$#i', $line, $m)) {
+                continue;
+            }
+            $roles = array_values(array_filter(array_map('sanitize_key', preg_split('/[\s,]+/', $m[2]))));
+            $routes[] = ['path' => untrailingslashit($m[1]) ?: '/', 'roles' => $roles, 'entrance' => self::entrance_key($m[3] ?? '')];
+        }
+        return $routes;
+    }
+
+    /**
+     * A protected page: whoever isn't signed in goes to sign in (through the page's entrance),
+     * and whoever is but has none of its roles sees that it isn't for them. Administrators
+     * always pass.
+     */
+    public function guard_routes(): void
+    {
+        $path = untrailingslashit((string) wp_parse_url(add_query_arg([]), PHP_URL_PATH)) ?: '/';
+        $home = untrailingslashit((string) wp_parse_url(home_url('/'), PHP_URL_PATH));
+        if ($home !== '' && strpos($path, $home) === 0) {
+            $path = substr($path, strlen($home)) ?: '/';
+        }
+        foreach (self::routes($this->settings->get('protected_routes')) as $route) {
+            $under = $route['path'] === '/' || $path === $route['path'] || strpos($path, $route['path'] . '/') === 0;
+            if (!$under) {
+                continue;
+            }
+            if (!is_user_logged_in()) {
+                $to = wp_login_url(home_url(add_query_arg([])));
+                wp_safe_redirect($route['entrance'] !== '' ? add_query_arg('inid_entrance', $route['entrance'], $to) : $to);
+                exit;
+            }
+            $user = wp_get_current_user();
+            if ($route['roles'] && !user_can($user, 'manage_options') && !array_intersect($route['roles'], (array) $user->roles)) {
+                $texts = ['es' => ['Esta página no es para tu cuenta', 'Entra con otra cuenta'], 'pt' => ['Esta página não é para a sua conta', 'Entrar com outra conta']][substr(get_locale(), 0, 2)] ?? ['This page isn\'t for your account', 'Sign in with another account'];
+                $again = wp_logout_url(add_query_arg($route['entrance'] !== '' ? ['inid_entrance' => $route['entrance']] : [], wp_login_url(home_url(add_query_arg([])))));
+                wp_die('<p>' . esc_html($texts[0]) . '.</p><p><a href="' . esc_url($again) . '">' . esc_html($texts[1]) . '</a></p>', esc_html($texts[0]), ['response' => 403]);
+            }
+            return;
+        }
     }
 
     public static function role_map(string $text): array

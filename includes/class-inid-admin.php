@@ -261,6 +261,10 @@ class InID_Admin
                         <p class="description">También puedes ponerlo en cualquier página con el shortcode <code>[inid_signin]</code>. Quién puede registrarse (dominios, lista de espera, invitaciones) se decide en el panel de InID, en Inicio de sesión.</p></td></tr>
                     <tr><th>Roles</th><td><textarea class="large-text code" rows="3" name="inid[role_map]" placeholder="admin=editor&#10;member=author"><?php echo esc_textarea($s['role_map']); ?></textarea>
                         <p class="description">Un rol de InID = un rol de WordPress, por línea. Nunca se da un rol que administre el sitio. Sin rol, cada persona entra con el rol por defecto de WordPress.</p></td></tr>
+                    <tr><th>Entrada en el inicio de sesión</th><td><input class="regular-text code" name="inid[entrance_login]" value="<?php echo esc_attr($s['entrance_login']); ?>" placeholder="team">
+                        <p class="description">La entrada de InID que usa <code>wp-login.php</code> (por ejemplo, la de tu equipo, solo con tu dominio). Vacío: la general. Las entradas se crean en el panel de InID, en Inicio de sesión. Mi cuenta y el checkout de WooCommerce siempre usan la general, la de tus clientes.</p></td></tr>
+                    <tr><th>Páginas protegidas</th><td><textarea class="large-text code" rows="3" name="inid[protected_routes]" placeholder="/intranet = author, editor (team)&#10;/miembros ="><?php echo esc_textarea($s['protected_routes']); ?></textarea>
+                        <p class="description">Una ruta por línea, con los roles de WordPress que pueden verla y, entre paréntesis, la entrada de InID por la que se inicia sesión. Sin roles: basta con iniciar sesión. Quien no tiene sesión va a iniciarla; quien no tiene el rol ve que esa página no es para su cuenta.</p></td></tr>
                 </table>
                 <?php submit_button('Guardar'); ?>
             </form>
