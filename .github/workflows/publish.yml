@@ -1,0 +1,51 @@
+name: publish
+# A version tag (from release.yml): its GitHub release, with what changed since the last one,
+# and the package on its registry. Each registry step runs once the registry is set up and
+# the repo variable that turns it on is "true" (see RELEASING.md in InID's repo).
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  github:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The plugin's .zip, with this version
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          sed -i -E "s/^( \* Version: ).*/\1$v/" inid.php
+          sed -i -E "s/define\('INID_VERSION', '[^']*'\);/define('INID_VERSION', '$v');/" inid.php
+          sed -i -E "s/^Stable tag: .*/Stable tag: $v/" readme.txt
+          mkdir -p /tmp/build/inid && rsync -a --exclude .git --exclude .github ./ /tmp/build/inid/
+          (cd /tmp/build && zip -qr "$GITHUB_WORKSPACE/inid-wordpress.zip" inid)
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          git log --format='- %s' "${previous:+$previous..}$GITHUB_REF_NAME" -- . ':(exclude).github' > notes.md
+          gh release create "$GITHUB_REF_NAME" inid-wordpress.zip --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+  # WordPress.org's plugin directory, once the plugin is approved there (slug "inid")
+  wordpress-org:
+    needs: github
+    if: vars.PUBLISH_WPORG == 'true'
+    runs-on: ubuntu-latest
+    environment: wordpress.org
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          v="${GITHUB_REF_NAME#v}"
+          sed -i -E "s/^( \* Version: ).*/\1$v/" inid.php
+          sed -i -E "s/define\('INID_VERSION', '[^']*'\);/define('INID_VERSION', '$v');/" inid.php
+          sed -i -E "s/^Stable tag: .*/Stable tag: $v/" readme.txt
+      - uses: 10up/action-wordpress-plugin-deploy@2.3.0
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: inid
+          VERSION: ${{ github.ref_name }}
