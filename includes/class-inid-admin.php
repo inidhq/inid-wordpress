@@ -71,7 +71,7 @@ class InID_Admin
         $n = (int) ($s['completed_purchases'] ?? 0);
         $lines[] = esc_html($n . ($n === 1 ? ' compra completada' : ' compras completadas') . ' con InID');
         if (!empty($s['strong_login'])) {
-            $lines[] = 'Entra con Face ID o huella';
+            $lines[] = 'Entra con passkey';
         }
         return '<span style="color:#3d5c00">' . implode('<br>', $lines) . '</span>';
     }

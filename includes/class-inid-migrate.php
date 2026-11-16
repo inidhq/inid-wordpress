@@ -104,7 +104,7 @@ class InID_Migrate
             <?php elseif (isset($_GET['error'])) : ?>
                 <div class="notice notice-error"><p>InID no respondió. Revisa la conexión del plugin e inténtalo de nuevo.</p></div>
             <?php endif; ?>
-            <p style="max-width:760px">Tus usuarios entran con InID, sin contraseña: su celular, Face ID o su huella. Al invitarlos, InID los deja entrar con el correo que tienen aquí (aunque tu app solo admita a ciertas personas) y con el rol de la app que corresponde a su rol de WordPress. La primera vez que entran con InID, su cuenta de aquí queda conectada: sus pedidos, su contenido y su rol siguen siendo los mismos.</p>
+            <p style="max-width:760px">Tus usuarios entran con InID, sin contraseña: su celular o una passkey (Face ID, huella, Windows Hello o el PIN del dispositivo). Al invitarlos, InID los deja entrar con el correo que tienen aquí (aunque tu app solo admita a ciertas personas) y con el rol de la app que corresponde a su rol de WordPress. La primera vez que entran con InID, su cuenta de aquí queda conectada: sus pedidos, su contenido y su rol siguen siendo los mismos.</p>
             <p><strong><?php echo esc_html("$connected de $total cuentas conectadas"); ?></strong><?php echo $invited ? esc_html(" · $invited invitadas") : ''; ?></p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="inid_migrate">
@@ -195,9 +195,9 @@ class InID_Migrate
         $name = $user->first_name ?: $user->display_name;
         $lang = substr(get_locale(), 0, 2);
         $texts = [
-            'es' => ["$site: ahora entras con InID", "Hola %s:\n\nAhora puedes entrar a %s sin contraseña, con InID: tu celular, Face ID o tu huella.\n\nEntra aquí y, si aún no tienes InID, créalo con este mismo correo (%s): tu cuenta, tus datos y tus pedidos siguen siendo los mismos.\n\n%s\n"],
-            'pt' => ["$site: agora você entra com InID", "Olá, %s:\n\nAgora você pode entrar em %s sem senha, com InID: seu celular, Face ID ou sua digital.\n\nEntre aqui e, se ainda não tiver InID, crie-o com este mesmo e-mail (%s): sua conta, seus dados e seus pedidos continuam os mesmos.\n\n%s\n"],
-            'en' => ["$site: you now sign in with InID", "Hi %s,\n\nYou can now sign in to %s without a password, with InID: your phone, Face ID or your fingerprint.\n\nSign in here and, if you don't have InID yet, create it with this same email (%s): your account, your data and your orders stay the same.\n\n%s\n"],
+            'es' => ["$site: ahora entras con InID", "Hola %s:\n\nAhora puedes entrar a %s sin contraseña, con InID: tu celular o una passkey (Face ID, huella, Windows Hello o el PIN del dispositivo).\n\nEntra aquí y, si aún no tienes InID, créalo con este mismo correo (%s): tu cuenta, tus datos y tus pedidos siguen siendo los mismos.\n\n%s\n"],
+            'pt' => ["$site: agora você entra com InID", "Olá, %s:\n\nAgora você pode entrar em %s sem senha, com InID: seu celular ou uma passkey (Face ID, digital, Windows Hello ou o PIN do dispositivo).\n\nEntre aqui e, se ainda não tiver InID, crie-o com este mesmo e-mail (%s): sua conta, seus dados e seus pedidos continuam os mesmos.\n\n%s\n"],
+            'en' => ["$site: you now sign in with InID", "Hi %s,\n\nYou can now sign in to %s without a password, with InID: your phone or a passkey (Face ID, fingerprint, Windows Hello or your device PIN).\n\nSign in here and, if you don't have InID yet, create it with this same email (%s): your account, your data and your orders stay the same.\n\n%s\n"],
         ];
         [$subject, $body] = $texts[$lang] ?? $texts['en'];
         wp_mail($user->user_email, $subject, sprintf($body, $name, $site, $user->user_email, wp_login_url()));
@@ -217,9 +217,9 @@ class InID_Migrate
         }
         if ($sub) {
             $unlink = wp_nonce_url(admin_url('admin-post.php?action=inid_unlink'), 'inid_unlink');
-            echo '<p>Conectada: entras con tu celular, Face ID o tu huella.</p><p><a class="button" href="' . esc_url($unlink) . '">Desconectar</a></p>';
+            echo '<p>Conectada: entras con tu celular o una passkey.</p><p><a class="button" href="' . esc_url($unlink) . '">Desconectar</a></p>';
         } else {
-            echo '<p>Entra sin contraseña: con tu celular, Face ID o tu huella.</p><p><a class="button button-primary" href="' . esc_url(InID_SignIn::link_url(admin_url('profile.php'))) . '">Conectar con InID</a></p>';
+            echo '<p>Entra sin contraseña: con tu celular o una passkey.</p><p><a class="button button-primary" href="' . esc_url(InID_SignIn::link_url(admin_url('profile.php'))) . '">Conectar con InID</a></p>';
         }
         echo '</td></tr></table>';
     }
@@ -246,7 +246,7 @@ class InID_Migrate
             return;
         }
         $later = wp_nonce_url(admin_url('admin-post.php?action=inid_dismiss'), 'inid_dismiss');
-        echo '<div class="notice notice-info"><p><strong>Entra sin contraseña.</strong> Conecta tu cuenta con InID y entra con tu celular, Face ID o tu huella. <a class="button button-primary" style="margin-left:8px" href="' . esc_url(InID_SignIn::link_url(admin_url('profile.php'))) . '">Conectar con InID</a> <a style="margin-left:8px" href="' . esc_url($later) . '">Ahora no</a></p></div>';
+        echo '<div class="notice notice-info"><p><strong>Entra sin contraseña.</strong> Conecta tu cuenta con InID y entra con tu celular o una passkey. <a class="button button-primary" style="margin-left:8px" href="' . esc_url(InID_SignIn::link_url(admin_url('profile.php'))) . '">Conectar con InID</a> <a style="margin-left:8px" href="' . esc_url($later) . '">Ahora no</a></p></div>';
     }
 
     public function dismiss(): void
@@ -270,6 +270,6 @@ class InID_Migrate
             return;
         }
         $here = wc_get_page_permalink('myaccount');
-        echo '<p class="inid-connect" style="padding:14px 16px;border:1px solid #e2e2e6;border-radius:10px">Entra sin contraseña la próxima vez: con tu celular, Face ID o tu huella. <a class="button" href="' . esc_url(InID_SignIn::link_url($here)) . '">Conectar con InID</a></p>';
+        echo '<p class="inid-connect" style="padding:14px 16px;border:1px solid #e2e2e6;border-radius:10px">Entra sin contraseña la próxima vez: con tu celular o una passkey. <a class="button" href="' . esc_url(InID_SignIn::link_url($here)) . '">Conectar con InID</a></p>';
     }
 }
