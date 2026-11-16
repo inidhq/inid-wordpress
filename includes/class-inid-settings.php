@@ -2,7 +2,7 @@
 defined('ABSPATH') || exit;
 
 /**
- * The store's InID keys and URLs, kept in one WordPress option.
+ * The site's InID keys and URLs, kept in one WordPress option.
  */
 class InID_Settings
 {
@@ -58,7 +58,7 @@ class InID_Settings
         return rtrim($this->get('public_url'), '/') === self::DEFAULTS['public_url'] ? self::PANEL : $this->api_url();
     }
 
-    /** Where the store's own settings live in InID (its account, domains, offer; connecting) */
+    /** Where the organization's own settings live in InID (its account, domains, offer; connecting) */
     public function merchant_url(): string
     {
         if ($this->get('merchant_url') !== '') {
@@ -68,7 +68,7 @@ class InID_Settings
         return rtrim($this->get('public_url'), '/') === self::DEFAULTS['public_url'] ? self::PANEL : $this->api_url();
     }
 
-    /** Where the people who run the store manage it */
+    /** Where the people who run the organization manage it */
     public function panel_url(): string
     {
         return rtrim((string) apply_filters('inid_panel_url', self::PANEL), '/');

@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 /**
  * WooCommerce customers created from InID, and checkouts left unsent.
  *
- * Accounts are matched only by InID's per-store id (sub). Never by email: InID emails are
+ * Accounts are matched only by InID's per-organization id (sub). Never by email: InID emails are
  * declared, not verified, and matching on them would let anyone typing someone else's
  * email into InID log into that person's account here.
  */
@@ -111,7 +111,7 @@ class InID_Customers
                 'strong_login' => !empty($c['inid_signals']['strong_login']),
             ]);
         }
-        // Only when the store asks for them in InID
+        // Only when the organization asks for them in InID
         if (!empty($c['birthdate'])) {
             update_user_meta($user_id, 'billing_birthdate', sanitize_text_field($c['birthdate']));
         }

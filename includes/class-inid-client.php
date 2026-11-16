@@ -137,7 +137,7 @@ class InID_Client
         return $this->decode($response);
     }
 
-    /** This site proves its domain and gets its store's keys, with no key yet (see InID_Connect) */
+    /** This site proves its domain and gets its organization's keys, with no key yet (see InID_Connect) */
     public function connect(array $body)
     {
         $response = wp_remote_post($this->settings->merchant_url() . '/v1/connect', [
@@ -149,7 +149,7 @@ class InID_Client
         return $this->decode($response);
     }
 
-    /** A link that signs the person in to the panel, at this store */
+    /** A link that signs the person in to the panel, at this organization */
     public function panel_link()
     {
         $response = wp_remote_post($this->settings->merchant_url() . '/v1/panel-link', [
@@ -160,7 +160,7 @@ class InID_Client
         return $this->decode($response);
     }
 
-    /** Asks InID to look for the store's proof on its domains (see InID_Domain) */
+    /** Asks InID to look for the organization's proof on its domains (see InID_Domain) */
     public function verify_domains()
     {
         $response = wp_remote_post($this->settings->merchant_url() . '/v1/domains/verify', [

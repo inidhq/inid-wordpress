@@ -2,8 +2,8 @@
 defined('ABSPATH') || exit;
 
 /**
- * Proves to InID that this site's domain is the store's, so its live key works here:
- * publishes the store's token at /.well-known/inid-verify.txt and asks InID to look.
+ * Proves to InID that this site's domain is the organization's, so its live key works here:
+ * publishes the organization's token at /.well-known/inid-verify.txt and asks InID to look.
  * Done when the settings are saved, and again from the InID page while it's pending.
  */
 class InID_Domain
@@ -44,7 +44,7 @@ class InID_Domain
     }
 
     /**
-     * Keeps the token InID gave the store and asks InID to verify. Returns the domains as
+     * Keeps the token InID gave the organization and asks InID to verify. Returns the domains as
      * InID sees them, or null when it couldn't ask.
      */
     public function prove(?array $account = null): ?array

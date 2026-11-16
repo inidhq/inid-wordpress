@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 /**
  * Connects this site to InID with one button and nothing to copy. The site proves its
  * domain is its own (a secret made here, its SHA-256 shown at /.well-known/inid-verify.txt)
- * and InID answers with the store's keys, already tied to this address and its webhook.
+ * and InID answers with the organization's keys, already tied to this address and its webhook.
  * Afterwards, "Abrir el panel" asks InID for a link that signs the person in to the panel.
  */
 class InID_Connect
@@ -75,7 +75,7 @@ class InID_Connect
 
     /**
      * "Ya tengo una tienda en InID": to the panel, where the person picks which of their
-     * stores this site belongs to. The site shows its proof meanwhile; the panel sends the
+     * organizations this site belongs to. The site shows its proof meanwhile; the panel sends the
      * person back with a grant (linked) that this server trades for the keys.
      */
     public function link(): void
@@ -122,8 +122,8 @@ class InID_Connect
     }
 
     /**
-     * Asks InID for this site's store, with the secret behind the proof the site shows now
-     * (and, for a store that already has people, the grant one of them gave in the panel).
+     * Asks InID for this site's organization, with the secret behind the proof the site shows now
+     * (and, for an organization that already has people, the grant one of them gave in the panel).
      *
      * @return true|WP_Error
      */
@@ -145,12 +145,12 @@ class InID_Connect
         if ($woo) {
             $body['country'] = (string) (wc_get_base_location()['country'] ?? '');
         } else {
-            // Without a store, the heatmap and the live view are all this site uses
+            // Without a shop, the heatmap and the live view are all this site uses
             $body['heatmap'] = true;
         }
         $keys = $this->client->connect($body);
         if (is_wp_error($keys) || empty($keys['publishableKey']) || empty($keys['secretKey'])) {
-            // What this site showed before (a store connected by hand keeps its proof)
+            // What this site showed before (an organization connected by hand keeps its proof)
             update_option(InID_Domain::TOKEN, $before, true);
             return is_wp_error($keys) ? $keys : new WP_Error('inid_request_failed', 'InID: request failed');
         }
@@ -159,12 +159,12 @@ class InID_Connect
             'secret_key' => $keys['secretKey'],
             'webhook_secret' => (string) ($keys['webhookSecret'] ?? ''),
         ]));
-        // From now on the site shows the store's own proof, which InID checks again over time
+        // From now on the site shows the organization's own proof, which InID checks again over time
         update_option(InID_Domain::TOKEN, sanitize_text_field((string) ($keys['verifyToken'] ?? '')), true);
         return true;
     }
 
-    /** To the panel, signed in to this store */
+    /** To the panel, signed in to this organization */
     public function panel(): void
     {
         if (!self::allowed() || !check_admin_referer('inid_panel')) {
@@ -218,7 +218,7 @@ class InID_Connect
             <?php
             return;
         }
-        // A public key pasted by hand: the site already has its store, made in the panel
+        // A public key pasted by hand: the site already has its organization, made in the panel
         if ($this->settings->get('publishable_key') !== '') {
             echo '<p><a class="button" href="' . esc_url($this->settings->panel_url() . '/') . '" target="_blank" rel="noopener">Abrir el panel de InID</a></p>';
             return;

@@ -2,8 +2,8 @@
 defined('ABSPATH') || exit;
 
 /**
- * /wp-json/inid/v1/webhook  InID → store: create the customer, record abandoned checkouts
- * /wp-json/inid/v1/login    page → store: sign the buyer in with a token from the pixel
+ * /wp-json/inid/v1/webhook  InID → site: create the customer, record abandoned checkouts
+ * /wp-json/inid/v1/login    page → site: sign the buyer in with a token from the pixel
  */
 class InID_Rest
 {
