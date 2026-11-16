@@ -29,7 +29,7 @@ Al conectar, el sitio le envía a InID su nombre, su dirección y el correo del 
 
 == Changelog ==
 = 0.7.1 =
-* El ajuste de la dirección de las organizaciones en InID se llama organization_url (el anterior, merchant_url, se sigue leyendo).
+* El ajuste de la dirección de las organizaciones en InID se llama organization_url.
 = 0.7.0 =
 * Usuarios → Pasar a InID: invita a las cuentas que ya existen (por rol, con su rol en la app y un correo del sitio); se conectan la primera vez que entran con InID.
 * Conectar con InID desde el perfil y desde Mi cuenta; aviso a quien aún entra con contraseña.

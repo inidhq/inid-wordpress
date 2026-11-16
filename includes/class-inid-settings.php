@@ -36,12 +36,7 @@ class InID_Settings
 
     public function all(): array
     {
-        $all = array_merge(self::DEFAULTS, (array) get_option(self::OPTION, []));
-        // Saved before it was called organization_url (plugin 0.7 and older)
-        if ($all['organization_url'] === '' && !empty($all['merchant_url'])) {
-            $all['organization_url'] = (string) $all['merchant_url'];
-        }
-        return $all;
+        return array_merge(self::DEFAULTS, (array) get_option(self::OPTION, []));
     }
 
     public function get(string $key): string
