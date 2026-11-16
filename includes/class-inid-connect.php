@@ -182,9 +182,9 @@ class InID_Connect
             case 'inid_proof_not_found':
                 return 'InID no pudo leer la prueba en ' . home_url(InID_Domain::PATH) . '. Tu servidor, un firewall o un plugin de caché no dejan llegar esa dirección a WordPress. Permítela y vuelve a intentar, o pega las llaves del panel de InID.';
             case 'inid_domain_taken':
-                return 'Este dominio ya tiene una tienda en InID con quien la administra. Usa "Ya tengo una tienda en InID", abajo, y entra con esa cuenta.';
+                return 'Este dominio ya tiene una organización en InID con quien la administra. Usa "Ya tengo una organización en InID", abajo, y entra con esa cuenta.';
             case 'inid_invalid_grant':
-                return 'El permiso del panel venció o no era para este sitio. Presiona "Ya tengo una tienda en InID" otra vez.';
+                return 'El permiso del panel venció o no era para este sitio. Presiona "Ya tengo una organización en InID" otra vez.';
             case 'inid_invalid_site':
                 return 'Para conectar en un clic el sitio debe ser público y usar HTTPS. Mientras tanto, pega las llaves del panel de InID.';
             case 'inid_too_many_attempts':
@@ -213,7 +213,7 @@ class InID_Connect
                 <input type="hidden" name="action" value="inid_panel">
                 <?php wp_nonce_field('inid_panel'); ?>
                 <button class="button button-primary">Abrir el panel de InID</button>
-                <span class="description" style="margin-left:8px">Este sitio está conectado. La primera vez, entras con tu celular y quedas como dueño de la tienda en InID.</span>
+                <span class="description" style="margin-left:8px">Este sitio está conectado. La primera vez, entras con tu celular y quedas a cargo de la organización en InID.</span>
             </form>
             <?php
             return;
@@ -227,7 +227,7 @@ class InID_Connect
         <div class="card" style="max-width:720px">
             <h2 style="margin-top:0">Conecta este sitio con InID</h2>
             <?php if ($this->possible()) : ?>
-                <p>Un clic y listo: InID comprueba que <strong><?php echo esc_html((string) wp_parse_url(home_url(), PHP_URL_HOST)); ?></strong> es tuyo, crea tu tienda y este plugin guarda las llaves. No hay nada que copiar ni pegar.</p>
+                <p>Un clic y listo: InID comprueba que <strong><?php echo esc_html((string) wp_parse_url(home_url(), PHP_URL_HOST)); ?></strong> es tuyo, crea tu organización y este plugin guarda las llaves. No hay nada que copiar ni pegar.</p>
                 <form method="post" action="<?php echo $action; ?>">
                     <input type="hidden" name="action" value="inid_connect">
                     <?php wp_nonce_field('inid_connect'); ?>
@@ -237,7 +237,7 @@ class InID_Connect
                 <form method="post" action="<?php echo $action; ?>" style="margin-top:14px">
                     <input type="hidden" name="action" value="inid_link">
                     <?php wp_nonce_field('inid_link'); ?>
-                    <button class="button-link">Ya tengo una tienda en InID</button>
+                    <button class="button-link">Ya tengo una organización en InID</button>
                     <span class="description"> · eliges cuál en el panel y este sitio queda conectado a ella.</span>
                 </form>
             <?php else : ?>

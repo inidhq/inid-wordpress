@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: InID — Registro en un toque
+ * Plugin Name: InID — Inicio de sesión sin contraseña
  * Description: Inicia sesión con InID en cualquier WordPress (roles y sesiones incluidos), mapa de calor y visitantes en vivo. Con WooCommerce, además, tus clientes se registran y llenan el checkout en un toque.
- * Version: 0.6.0
+ * Version: 0.7.0
  * Requires at least: 6.3
  * Requires PHP: 7.4
  * Text Domain: inid
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('INID_VERSION', '0.6.0');
+define('INID_VERSION', '0.7.0');
 define('INID_DIR', __DIR__);
 define('INID_URL', plugin_dir_url(__FILE__));
 
@@ -27,6 +27,7 @@ require_once INID_DIR . '/includes/class-inid-site.php';
 require_once INID_DIR . '/includes/class-inid-connect.php';
 require_once INID_DIR . '/includes/class-inid-signin.php';
 require_once INID_DIR . '/includes/class-inid-access.php';
+require_once INID_DIR . '/includes/class-inid-migrate.php';
 
 register_activation_hook(__FILE__, ['InID_Customers', 'install']);
 
@@ -45,6 +46,8 @@ add_action('plugins_loaded', function () {
     $access->register();
     $signin = new InID_SignIn($settings, $client, $access);
     $signin->register();
+    // The site's existing users, brought to InID
+    (new InID_Migrate($settings, $client))->register();
     // Any other site: that, the heatmap and the live view
     if (!class_exists('WooCommerce')) {
         (new InID_Site($settings, $connect))->register();

@@ -243,7 +243,7 @@ class InID_Admin
             </table>
 
             <h2>Conexión</h2>
-            <p style="max-width:720px"><?php echo $this->settings->ready() ? 'Las llaves de esta tienda ya están guardadas. Cámbialas solo si las rotaste en el panel de InID.' : 'Con "Conectar con InID", arriba, no hace falta llenar nada de esto. Úsalo solo si prefieres pegar las llaves del panel a mano.'; ?></p>
+            <p style="max-width:720px"><?php echo $this->settings->ready() ? 'Las llaves de este sitio ya están guardadas. Cámbialas solo si las rotaste en el panel de InID.' : 'Con "Conectar con InID", arriba, no hace falta llenar nada de esto. Úsalo solo si prefieres pegar las llaves del panel a mano.'; ?></p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="inid_save">
                 <?php wp_nonce_field('inid_save'); ?>
@@ -263,6 +263,8 @@ class InID_Admin
                         <p class="description">Un rol de InID = un rol de WordPress, por línea. Nunca se da un rol que administre el sitio. Sin rol, cada persona entra con el rol por defecto de WordPress.</p></td></tr>
                     <tr><th>Entrada en el inicio de sesión</th><td><input class="regular-text code" name="inid[entrance_login]" value="<?php echo esc_attr($s['entrance_login']); ?>" placeholder="team">
                         <p class="description">La entrada de InID que usa <code>wp-login.php</code> (por ejemplo, la de tu equipo, solo con tu dominio). Vacío: la general. Las entradas se crean en el panel de InID, en Inicio de sesión. Mi cuenta y el checkout de WooCommerce siempre usan la general, la de tus clientes.</p></td></tr>
+                    <tr><th>Contraseñas</th><td><input type="hidden" name="inid[password_off_linked]" value="no"><label><input type="checkbox" name="inid[password_off_linked]" value="yes" <?php checked($s['password_off_linked'], 'yes'); ?>> Las cuentas conectadas a InID ya no entran con contraseña</label>
+                        <p class="description">Los administradores siempre pueden usar la suya. Para conectar a tus usuarios: Usuarios → Pasar a InID.</p></td></tr>
                     <tr><th>Páginas protegidas</th><td><textarea class="large-text code" rows="3" name="inid[protected_routes]" placeholder="/intranet = author, editor (team)&#10;/miembros ="><?php echo esc_textarea($s['protected_routes']); ?></textarea>
                         <p class="description">Una ruta por línea, con los roles de WordPress que pueden verla y, entre paréntesis, la entrada de InID por la que se inicia sesión. Sin roles: basta con iniciar sesión. Quien no tiene sesión va a iniciarla; quien no tiene el rol ve que esa página no es para su cuenta.</p></td></tr>
                 </table>

@@ -30,6 +30,8 @@ class InID_Settings
         'entrance_login' => '',
         // Pages only some roles see, one "/intranet = author, editor (team)" per line
         'protected_routes' => '',
+        // Accounts connected to InID can't use their password any more (administrators can)
+        'password_off_linked' => 'no',
     ];
 
     public function all(): array

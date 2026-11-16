@@ -2,7 +2,7 @@
 Requires at least: 6.3
 Requires PHP: 7.4
 WC requires at least: 8.0
-Stable tag: 0.6.0
+Stable tag: 0.7.0
 
 Tus usuarios inician sesión con InID en cualquier WordPress, sin contraseñas: el formulario va dentro de la página de inicio de sesión, con roles y sesiones sincronizados. Además, mapa de calor y visitantes en vivo. Con WooCommerce, además, tus clientes se registran y llenan el checkout con InID: un toque y su huella o un código por WhatsApp.
 
@@ -14,9 +14,9 @@ Tus usuarios inician sesión con InID en cualquier WordPress, sin contraseñas: 
 
 == Con WooCommerce ==
 1. Sube la carpeta `inid` a `wp-content/plugins/` y actívala.
-2. WooCommerce → InID: **Conectar con InID**. La tienda prueba que el dominio es suyo y recibe sus llaves, con su dirección y su webhook ya registrados en InID; no hay nada que copiar.
+2. WooCommerce → InID: **Conectar con InID**. El sitio prueba que el dominio es suyo y recibe sus llaves, con su dirección y su webhook ya registrados en InID; no hay nada que copiar.
 
-Si ya creaste tu tienda en el panel de InID, usa **Ya tengo una tienda en InID**: eliges cuál en el panel y el sitio queda conectado a ella.
+Si ya creaste tu organización en el panel de InID, usa **Ya tengo una organización en InID**: eliges cuál en el panel y el sitio queda conectado a ella.
 
 Al conectar, el sitio le envía a InID su nombre, su dirección y el correo del administrador. Un sitio sin HTTPS o que no es público (local, intranet) no puede conectarse así: pega las llaves del panel de InID en la misma pantalla.
 
@@ -28,6 +28,11 @@ Al conectar, el sitio le envía a InID su nombre, su dirección y el correo del 
 * Muestra el embudo (solo conteos) y los checkouts sin terminar.
 
 == Changelog ==
+= 0.7.0 =
+* Usuarios → Pasar a InID: invita a las cuentas que ya existen (por rol, con su rol en la app y un correo del sitio); se conectan la primera vez que entran con InID.
+* Conectar con InID desde el perfil y desde Mi cuenta; aviso a quien aún entra con contraseña.
+* Opción para que las cuentas conectadas ya no entren con contraseña (los administradores sí).
+* Textos: organización en vez de tienda donde se habla de InID.
 = 0.6.0 =
 * Acceso con InID en cada página, entrada o producto: cualquiera, con sesión, ciertos roles o ciertos permisos de la app, y la entrada por la que se inicia sesión. El contenido protegido no aparece en listados, búsquedas, feeds ni la API REST.
 = 0.5.0 =

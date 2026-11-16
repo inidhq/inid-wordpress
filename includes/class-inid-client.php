@@ -54,6 +54,12 @@ class InID_Client
         return $this->decode($response);
     }
 
+    /** Invitations, up to 200 at once: [{ email, role? }] → { invited, failed } */
+    public function invite_batch(array $invitations)
+    {
+        return $this->post('/v1/invitations', ['invitations' => array_values($invitations)]);
+    }
+
     /** The app's roles with their permissions, its default role and its entrances */
     public function app_roles()
     {

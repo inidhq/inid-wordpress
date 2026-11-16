@@ -49,6 +49,15 @@ class InID_SignIn
         add_filter('attach_session_information', [$this, 'session_information'], 10, 2);
         // Signing out here ends it at InID too
         add_action('login_form_logout', [$this, 'end_at_inid'], 1);
+        // Accounts connected to InID sign in only with it, if the site says so (never administrators)
+        if ($this->settings->get('password_off_linked') === 'yes') {
+            add_filter('authenticate', function ($user) {
+                if ($user instanceof WP_User && get_user_meta($user->ID, self::SUB_META, true) && !user_can($user, 'manage_options')) {
+                    return new WP_Error('inid_only', ['es' => 'Esta cuenta entra con InID: usa tu celular arriba.', 'pt' => 'Esta conta entra com InID: use seu celular acima.'][substr(get_locale(), 0, 2)] ?? 'This account signs in with InID: use your phone above.');
+                }
+                return $user;
+            }, 40);
+        }
         // WooCommerce saving a customer writes its role back: the one InID gave stays
         add_action('inid_customer_saved', function ($user_id) {
             $given = (string) get_user_meta($user_id, 'inid_wp_role', true);
@@ -115,6 +124,15 @@ class InID_SignIn
             'back' => wp_validate_redirect(wp_unslash((string) ($_GET['redirect_to'] ?? '')), admin_url()),
             'embed' => $embed,
         ];
+        // Someone signed in with their password connects their account to their InID
+        if (!empty($_GET['link'])) {
+            if (!is_user_logged_in() || !check_admin_referer('inid_link')) {
+                wp_die('No autorizado', '', ['response' => 403]);
+            }
+            $flow['link'] = get_current_user_id();
+            $flow['embed'] = false;
+            $embed = false;
+        }
         setcookie(self::FLOW_COOKIE . $state, base64_encode(wp_json_encode($flow)), ['expires' => time() + 600, 'path' => '/', 'secure' => is_ssl(), 'httponly' => true, 'samesite' => 'Lax']);
         $query = [
             'client_id' => $this->settings->get('publishable_key'),
@@ -165,6 +183,10 @@ class InID_SignIn
         if (!$claims) {
             self::log('sign-in failed: ' . (is_wp_error($tokens) ? $tokens->get_error_code() : 'id_token not accepted'));
             $leave(add_query_arg('inid_error', '1', wp_login_url($flow['back'])));
+            return;
+        }
+        if (!empty($flow['link'])) {
+            $this->link((int) $flow['link'], $claims, $flow['back']);
             return;
         }
         $user_id = $this->user_for($claims);
@@ -253,7 +275,34 @@ class InID_SignIn
             return (int) $found[0];
         }
         $by_email = $email ? get_user_by('email', $email) : null;
-        return $by_email && !user_can($by_email, 'edit_posts') ? (int) $by_email->ID : 0;
+        if (!$by_email || user_can($by_email, 'manage_options') || get_user_meta($by_email->ID, self::SUB_META, true)) {
+            return 0;
+        }
+        // Accounts that can't edit anything, and the ones the site invited to InID (Usuarios →
+        // Pasar a InID); administrators connect from their own profile
+        return !user_can($by_email, 'edit_posts') || get_user_meta($by_email->ID, InID_Migrate::INVITED, true) ? (int) $by_email->ID : 0;
+    }
+
+    /** The account signed in now gets this InID (never one another account already has) */
+    private function link(int $user_id, array $claims, string $back): void
+    {
+        $sub = (string) $claims['sub'];
+        $taken = get_users(['meta_key' => self::SUB_META, 'meta_value' => $sub, 'number' => 1, 'fields' => 'ID']);
+        if ($user_id !== get_current_user_id() || ($taken && (int) $taken[0] !== $user_id)) {
+            wp_safe_redirect(add_query_arg('inid_linked', 'taken', $back));
+            exit;
+        }
+        update_user_meta($user_id, self::SUB_META, $sub);
+        delete_user_meta($user_id, 'inid_removed');
+        InID_Access::remember($user_id, (array) ($claims['roles'] ?? []), (array) ($claims['permissions'] ?? []));
+        wp_safe_redirect(add_query_arg('inid_linked', '1', $back));
+        exit;
+    }
+
+    /** Where someone signed in connects their account (back to $back) */
+    public static function link_url(string $back): string
+    {
+        return wp_nonce_url(add_query_arg(['action' => 'inid', 'link' => '1', 'redirect_to' => rawurlencode($back)], wp_login_url()), 'inid_link');
     }
 
     /**
