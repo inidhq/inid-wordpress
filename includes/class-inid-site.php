@@ -72,7 +72,7 @@ class InID_Site
             <h1><svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true" style="vertical-align:-7px;margin-right:8px"><rect width="100" height="100" rx="23" fill="#111113"/><rect x="24" y="50" width="20" height="20" rx="3" fill="#fff"/><rect x="56" y="30" width="20" height="20" rx="3" fill="#c6ff3d"/></svg>InID</h1>
             <?php if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Guardado.</p></div><?php endif; ?>
             <?php $this->connect->card(); ?>
-            <p>Mapa de calor y visitantes en vivo de este sitio. Se ven en el panel de InID. El pixel no toca tus formularios ni le muestra nada al visitante, y no se carga cuando tienes la sesión de WordPress iniciada.</p>
+            <p>Tus usuarios inician sesión con InID en la página de inicio de sesión de WordPress, sin contraseñas. Además, mapa de calor y visitantes en vivo de este sitio. Se ven en el panel de InID. El pixel no toca tus formularios ni le muestra nada al visitante, y no se carga cuando tienes la sesión de WordPress iniciada.</p>
 
             <h2>Aviso de cookies</h2>
             <?php if (InID_Consent::available()) : ?>
@@ -81,13 +81,17 @@ class InID_Site
                 <div class="notice notice-warning inline"><p><strong>No encontramos un aviso de cookies compatible.</strong> El mapa de calor, En vivo y el seguimiento de visitas necesitan que el visitante acepte las cookies de estadísticas, y pedirlo es responsabilidad del sitio. Mientras no haya aviso, InID cuenta a todos. Instala un aviso compatible con la WP Consent API (Complianz, CookieYes, Cookiebot y otros) y InID esperará la respuesta del visitante sin que tengas que configurar nada.</p></div>
             <?php endif; ?>
 
-            <h2>Llave</h2>
+            <h2>Ajustes</h2>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="inid_site_save">
                 <?php wp_nonce_field('inid_site_save'); ?>
                 <table class="form-table">
                     <tr><th>Llave pública</th><td><input class="regular-text" name="inid[publishable_key]" value="<?php echo esc_attr($s['publishable_key']); ?>" placeholder="pk_live_..."><p class="description">Con "Conectar con InID", arriba, se llena sola. A mano: está en el panel de InID, en Llaves.</p></td></tr>
                     <tr><th>URL de InID</th><td><input class="regular-text" name="inid[public_url]" value="<?php echo esc_attr($s['public_url']); ?>"></td></tr>
+                    <tr><th>Iniciar sesión con InID</th><td><input type="hidden" name="inid[signin_on_login]" value="no"><label><input type="checkbox" name="inid[signin_on_login]" value="yes" <?php checked($s['signin_on_login'], 'yes'); ?>> En la página de inicio de sesión de WordPress</label>
+                        <p class="description">También puedes ponerlo en cualquier página con el shortcode <code>[inid_signin]</code>. Quién puede registrarse (dominios, lista de espera, invitaciones) se decide en el panel de InID, en Inicio de sesión.</p></td></tr>
+                    <tr><th>Roles</th><td><textarea class="large-text code" rows="3" name="inid[role_map]" placeholder="admin=editor&#10;member=author"><?php echo esc_textarea($s['role_map']); ?></textarea>
+                        <p class="description">Un rol de InID = un rol de WordPress, por línea. Nunca se da un rol que administre el sitio. Sin rol, cada persona entra con el rol por defecto de WordPress.</p></td></tr>
                 </table>
                 <?php submit_button('Guardar'); ?>
             </form>

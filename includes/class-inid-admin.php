@@ -256,7 +256,11 @@ class InID_Admin
                     <tr><th>URL de InID desde el servidor</th><td><input class="regular-text" name="inid[api_url]" value="<?php echo esc_attr($s['api_url']); ?>" placeholder="Igual a la anterior">
                         <p class="description">Solo si este servidor llega a InID por otra dirección (por ejemplo, en Docker).</p></td></tr>
                     <tr><th>URL de la analítica</th><td><input class="regular-text" name="inid[analytics_url]" value="<?php echo esc_attr($s['analytics_url']); ?>" placeholder="Igual a la anterior"></td></tr>
-                    <tr><th>Iniciar sesión con InID</th><td><label><input type="checkbox" name="inid[signin_on_account]" value="yes" <?php checked($s['signin_on_account'], 'yes'); ?>> En el formulario de Mi cuenta</label></td></tr>
+                    <tr><th>En Mi cuenta</th><td><input type="hidden" name="inid[signin_on_account]" value="no"><label><input type="checkbox" name="inid[signin_on_account]" value="yes" <?php checked($s['signin_on_account'], 'yes'); ?>> "Iniciar sesión con InID" en el formulario de Mi cuenta</label></td></tr>
+                    <tr><th>Iniciar sesión con InID</th><td><input type="hidden" name="inid[signin_on_login]" value="no"><label><input type="checkbox" name="inid[signin_on_login]" value="yes" <?php checked($s['signin_on_login'], 'yes'); ?>> En la página de inicio de sesión de WordPress</label>
+                        <p class="description">También puedes ponerlo en cualquier página con el shortcode <code>[inid_signin]</code>. Quién puede registrarse (dominios, lista de espera, invitaciones) se decide en el panel de InID, en Inicio de sesión.</p></td></tr>
+                    <tr><th>Roles</th><td><textarea class="large-text code" rows="3" name="inid[role_map]" placeholder="admin=editor&#10;member=author"><?php echo esc_textarea($s['role_map']); ?></textarea>
+                        <p class="description">Un rol de InID = un rol de WordPress, por línea. Nunca se da un rol que administre el sitio. Sin rol, cada persona entra con el rol por defecto de WordPress.</p></td></tr>
                 </table>
                 <?php submit_button('Guardar'); ?>
             </form>

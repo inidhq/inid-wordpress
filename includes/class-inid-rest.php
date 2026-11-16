@@ -14,11 +14,14 @@ class InID_Rest
     /** @var InID_Customers */
     private $customers;
 
-    public function __construct(InID_Settings $settings, InID_Client $client, InID_Customers $customers)
+    private $signin;
+
+    public function __construct(InID_Settings $settings, InID_Client $client, ?InID_Customers $customers, ?InID_SignIn $signin = null)
     {
         $this->settings = $settings;
         $this->client = $client;
         $this->customers = $customers;
+        $this->signin = $signin;
     }
 
     public function register(): void
@@ -29,6 +32,9 @@ class InID_Rest
                 'callback' => [$this, 'webhook'],
                 'permission_callback' => '__return_true', // authenticated by its signature
             ]);
+            if (!$this->customers) {
+                return;
+            }
             register_rest_route('inid/v1', '/login', [
                 'methods' => 'POST',
                 'callback' => [$this, 'login'],
@@ -42,7 +48,14 @@ class InID_Rest
         if (!$this->client->verify_webhook($request->get_body(), (string) $request->get_header('inid_signature'))) {
             return new WP_REST_Response(['error' => 'bad_signature'], 401);
         }
-        $event = json_decode($request->get_body(), true);
+        $event = (array) json_decode($request->get_body(), true);
+        // The app's people (user.updated, user.deleted, session.ended), on any WordPress
+        if ($this->signin && $this->signin->handle_event($event)) {
+            return ['ok' => true];
+        }
+        if (!$this->customers) {
+            return ['ok' => true, 'ignored' => true];
+        }
         // The buyer closed their InID everywhere: their WordPress sessions close too
         if (($event['type'] ?? '') === 'customer.logged_out') {
             $user_id = $this->customers->find(sanitize_text_field((string) ($event['sub'] ?? '')));

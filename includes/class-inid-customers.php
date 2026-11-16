@@ -50,8 +50,16 @@ class InID_Customers
         $user_id = $this->find($sub);
         if (!$user_id) {
             $email = sanitize_email($c['email'] ?? '');
-            // An email already used by another account here is left out, not merged
-            if ($email && email_exists($email)) {
+            // An email already used here: the same person's account if it isn't anyone else's
+            // in InID and can't edit anything (just signed in with InID, a plain customer);
+            // otherwise the email is left out, not merged
+            $owner = $email ? get_user_by('email', $email) : null;
+            if ($owner && !user_can($owner, 'edit_posts') && in_array((string) get_user_meta($owner->ID, self::SUB_META, true), ['', $sub], true)) {
+                update_user_meta($owner->ID, self::SUB_META, $sub);
+                $this->fill_addresses((int) $owner->ID, $c);
+                return (int) $owner->ID;
+            }
+            if ($owner) {
                 $email = '';
             }
             $base = sanitize_user(strtolower(remove_accents(($c['given_name'] ?? 'cliente') . '.' . ($c['family_name'] ?? ''))), true);
@@ -69,7 +77,13 @@ class InID_Customers
                 'role' => 'customer',
             ]);
             if (is_wp_error($user_id)) {
-                return $user_id;
+                // Signed in with InID a moment ago (InID_SignIn made the account): that one
+                $user_id = $this->find($sub);
+                if (!$user_id) {
+                    return new WP_Error('inid_user_failed', 'InID: could not create the customer');
+                }
+                $this->fill_addresses((int) $user_id, $c);
+                return (int) $user_id;
             }
             update_user_meta($user_id, self::SUB_META, $sub);
             update_user_meta($user_id, '_inid_created', current_time('mysql'));
@@ -83,6 +97,8 @@ class InID_Customers
         $customer = new WC_Customer($user_id);
         $this->apply($customer, $c);
         $customer->save();
+        // Saving a customer writes its role back: the one InID gave (InID_SignIn) stays
+        do_action('inid_customer_saved', $user_id);
         if (!empty($c['national_id']['number'])) {
             update_user_meta($user_id, 'billing_document_type', sanitize_text_field($c['national_id']['type'] ?? 'CC'));
             update_user_meta($user_id, 'billing_document', sanitize_text_field($c['national_id']['number']));

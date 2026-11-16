@@ -23,6 +23,42 @@ class InID_Client
         return $this->post('/v1/tokens/exchange', ['token' => $token]);
     }
 
+    /** Sign-in with InID: the authorization code traded for tokens (the site's keys, Basic) */
+    public function oidc_token(string $code, string $verifier, string $redirect_uri)
+    {
+        $response = wp_remote_post($this->settings->api_url() . '/oauth/token', [
+            'headers' => ['Authorization' => $this->basic(), 'Content-Type' => 'application/x-www-form-urlencoded'],
+            'body' => ['grant_type' => 'authorization_code', 'code' => $code, 'redirect_uri' => $redirect_uri, 'code_verifier' => $verifier],
+            'timeout' => 8,
+        ]);
+        return $this->decode($response);
+    }
+
+    /** Ends a sign-in at InID (its refresh token); the person's InID stays signed in */
+    public function revoke(string $refresh_token): void
+    {
+        wp_remote_post($this->settings->api_url() . '/oauth/revoke', [
+            'headers' => ['Authorization' => $this->basic(), 'Content-Type' => 'application/x-www-form-urlencoded'],
+            'body' => ['token' => $refresh_token, 'token_type_hint' => 'refresh_token'],
+            'timeout' => 3,
+        ]);
+    }
+
+    /** One person of this site's app, as InID has them now */
+    public function app_user(string $sub)
+    {
+        $response = wp_remote_get($this->settings->api_url() . '/v1/users/' . rawurlencode($sub), [
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
+            'timeout' => 5,
+        ]);
+        return $this->decode($response);
+    }
+
+    private function basic(): string
+    {
+        return 'Basic ' . base64_encode(rawurlencode($this->settings->get('publishable_key')) . ':' . rawurlencode($this->settings->get('secret_key')));
+    }
+
     /** Invite a logged-in customer to save what the store already has in InID. */
     public function invite(array $customer)
     {

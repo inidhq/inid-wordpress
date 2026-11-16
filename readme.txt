@@ -2,14 +2,15 @@
 Requires at least: 6.3
 Requires PHP: 7.4
 WC requires at least: 8.0
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 
-Mapa de calor y visitantes en vivo para cualquier sitio de WordPress. Con WooCommerce, además, tus clientes se registran y llenan el checkout con InID: un toque y su huella o un código por WhatsApp.
+Tus usuarios inician sesión con InID en cualquier WordPress, sin contraseñas: el formulario va dentro de la página de inicio de sesión, con roles y sesiones sincronizados. Además, mapa de calor y visitantes en vivo. Con WooCommerce, además, tus clientes se registran y llenan el checkout con InID: un toque y su huella o un código por WhatsApp.
 
 == Sin WooCommerce ==
 1. Sube la carpeta `inid` a `wp-content/plugins/` y actívala.
 2. Ajustes → InID: **Conectar con InID**. El sitio prueba que el dominio es suyo y recibe su llave; no hay nada que copiar. Luego, **Abrir el panel de InID** para ver el mapa de calor y En vivo.
-3. El mapa de calor, En vivo y el seguimiento de visitas necesitan que el visitante acepte las cookies de estadísticas, y pedirlo es responsabilidad del sitio. Con un aviso compatible con la WP Consent API (Complianz, CookieYes, Cookiebot y otros), InID espera la respuesta del visitante solo. Sin aviso, cuenta a todos.
+3. Inicio de sesión: aparece solo en la página de inicio de sesión de WordPress (o donde pongas `[inid_signin]`). En Ajustes → InID, **Roles**: un rol de InID = un rol de WordPress por línea (`member=author`). Quién puede registrarse (dominios, lista de espera, invitaciones) se configura en el panel de InID.
+4. El mapa de calor, En vivo y el seguimiento de visitas necesitan que el visitante acepte las cookies de estadísticas, y pedirlo es responsabilidad del sitio. Con un aviso compatible con la WP Consent API (Complianz, CookieYes, Cookiebot y otros), InID espera la respuesta del visitante solo. Sin aviso, cuenta a todos.
 
 == Con WooCommerce ==
 1. Sube la carpeta `inid` a `wp-content/plugins/` y actívala.
@@ -25,3 +26,9 @@ Al conectar, el sitio le envía a InID su nombre, su dirección y el correo del 
 * "Iniciar sesión con InID" en Mi cuenta, sin contraseña.
 * Invita a los clientes con sesión iniciada a guardar sus datos en InID.
 * Muestra el embudo (solo conteos) y los checkouts sin terminar.
+
+== Changelog ==
+= 0.4.0 =
+* Iniciar sesión con InID en cualquier WordPress, dentro de wp-login.php y con el shortcode [inid_signin].
+* Roles de InID → roles de WordPress; cambios de nombre, correo y rol por webhook; quitar a alguien cierra sus sesiones y guarda su última copia.
+* Salir de WordPress termina la sesión en InID, y terminarla en InID cierra la de WordPress.

@@ -22,6 +22,10 @@ class InID_Settings
         'webhook_secret' => '',
         // "Iniciar sesión con InID" above the My Account login form
         'signin_on_account' => 'yes',
+        // "Iniciar sesión con InID" on wp-login.php (any WordPress)
+        'signin_on_login' => 'yes',
+        // InID roles → WordPress roles, one "admin=editor" per line
+        'role_map' => '',
     ];
 
     public function all(): array
@@ -74,7 +78,13 @@ class InID_Settings
         $clean = [];
         foreach (self::DEFAULTS as $key => $default) {
             $value = isset($values[$key]) ? trim(wp_unslash((string) $values[$key])) : $default;
-            $clean[$key] = in_array($key, ['public_url', 'api_url', 'analytics_url', 'merchant_url'], true) ? esc_url_raw($value) : sanitize_text_field($value);
+            if (in_array($key, ['public_url', 'api_url', 'analytics_url', 'merchant_url'], true)) {
+                $clean[$key] = esc_url_raw($value);
+            } elseif ($key === 'role_map') {
+                $clean[$key] = sanitize_textarea_field($value);
+            } else {
+                $clean[$key] = sanitize_text_field($value);
+            }
         }
         // An empty secret field keeps the saved one (the form never shows secrets)
         foreach (['secret_key', 'webhook_secret'] as $secret) {

@@ -141,8 +141,8 @@ class InID_Connect
         if ($grant !== '') {
             $body['grant'] = $grant;
         }
+        $body['webhookUrl'] = rest_url('inid/v1/webhook');
         if ($woo) {
-            $body['webhookUrl'] = rest_url('inid/v1/webhook');
             $body['country'] = (string) (wc_get_base_location()['country'] ?? '');
         } else {
             // Without a store, the heatmap and the live view are all this site uses
