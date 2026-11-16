@@ -54,6 +54,16 @@ class InID_Client
         return $this->decode($response);
     }
 
+    /** The app's roles with their permissions, its default role and its entrances */
+    public function app_roles()
+    {
+        $response = wp_remote_get($this->settings->api_url() . '/v1/roles', [
+            'headers' => ['Authorization' => 'Bearer ' . $this->settings->get('secret_key')],
+            'timeout' => 5,
+        ]);
+        return $this->decode($response);
+    }
+
     private function basic(): string
     {
         return 'Basic ' . base64_encode(rawurlencode($this->settings->get('publishable_key')) . ':' . rawurlencode($this->settings->get('secret_key')));

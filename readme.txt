@@ -2,7 +2,7 @@
 Requires at least: 6.3
 Requires PHP: 7.4
 WC requires at least: 8.0
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 
 Tus usuarios inician sesión con InID en cualquier WordPress, sin contraseñas: el formulario va dentro de la página de inicio de sesión, con roles y sesiones sincronizados. Además, mapa de calor y visitantes en vivo. Con WooCommerce, además, tus clientes se registran y llenan el checkout con InID: un toque y su huella o un código por WhatsApp.
 
@@ -28,6 +28,8 @@ Al conectar, el sitio le envía a InID su nombre, su dirección y el correo del 
 * Muestra el embudo (solo conteos) y los checkouts sin terminar.
 
 == Changelog ==
+= 0.6.0 =
+* Acceso con InID en cada página, entrada o producto: cualquiera, con sesión, ciertos roles o ciertos permisos de la app, y la entrada por la que se inicia sesión. El contenido protegido no aparece en listados, búsquedas, feeds ni la API REST.
 = 0.5.0 =
 * Entradas: los clientes entran por la general y tu equipo por la suya (wp-login.php, [inid_signin entrance="team"]).
 * Páginas protegidas por rol: "/intranet = author, editor (team)".

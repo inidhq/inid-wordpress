@@ -19,10 +19,14 @@ class InID_SignIn
     private $settings;
     private $client;
 
-    public function __construct(InID_Settings $settings, InID_Client $client)
+    /** @var InID_Access */
+    private $access;
+
+    public function __construct(InID_Settings $settings, InID_Client $client, InID_Access $access)
     {
         $this->settings = $settings;
         $this->client = $client;
+        $this->access = $access;
     }
 
     public function register(): void
@@ -232,6 +236,8 @@ class InID_SignIn
         }
         update_user_meta($user_id, self::SUB_META, $sub);
         $this->apply_role($user_id, (array) ($claims['roles'] ?? []));
+        // Their role and permissions in the app, for the pages that ask for them
+        InID_Access::remember($user_id, (array) ($claims['roles'] ?? []), (array) ($claims['permissions'] ?? []));
         return $user_id;
     }
 
@@ -318,18 +324,30 @@ class InID_SignIn
                 continue;
             }
             if (!is_user_logged_in()) {
-                $to = wp_login_url(home_url(add_query_arg([])));
-                wp_safe_redirect($route['entrance'] !== '' ? add_query_arg('inid_entrance', $route['entrance'], $to) : $to);
-                exit;
+                self::to_sign_in($route['entrance']);
             }
             $user = wp_get_current_user();
             if ($route['roles'] && !user_can($user, 'manage_options') && !array_intersect($route['roles'], (array) $user->roles)) {
-                $texts = ['es' => ['Esta página no es para tu cuenta', 'Entra con otra cuenta'], 'pt' => ['Esta página não é para a sua conta', 'Entrar com outra conta']][substr(get_locale(), 0, 2)] ?? ['This page isn\'t for your account', 'Sign in with another account'];
-                $again = wp_logout_url(add_query_arg($route['entrance'] !== '' ? ['inid_entrance' => $route['entrance']] : [], wp_login_url(home_url(add_query_arg([])))));
-                wp_die('<p>' . esc_html($texts[0]) . '.</p><p><a href="' . esc_url($again) . '">' . esc_html($texts[1]) . '</a></p>', esc_html($texts[0]), ['response' => 403]);
+                self::deny($route['entrance']);
             }
             return;
         }
+    }
+
+    /** To sign in (through the page's entrance), and back to this page */
+    public static function to_sign_in(string $entrance): void
+    {
+        $to = wp_login_url(home_url(add_query_arg([])));
+        wp_safe_redirect($entrance !== '' ? add_query_arg('inid_entrance', $entrance, $to) : $to);
+        exit;
+    }
+
+    /** Signed in, but this page isn't for their account: a 403 with a way to switch */
+    public static function deny(string $entrance): void
+    {
+        $texts = ['es' => ['Esta página no es para tu cuenta', 'Entra con otra cuenta'], 'pt' => ['Esta página não é para a sua conta', 'Entrar com outra conta']][substr(get_locale(), 0, 2)] ?? ['This page isn\'t for your account', 'Sign in with another account'];
+        $again = wp_logout_url(add_query_arg($entrance !== '' ? ['inid_entrance' => $entrance] : [], wp_login_url(home_url(add_query_arg([])))));
+        wp_die('<p>' . esc_html($texts[0]) . '.</p><p><a href="' . esc_url($again) . '">' . esc_html($texts[1]) . '</a></p>', esc_html($texts[0]), ['response' => 403]);
     }
 
     public static function role_map(string $text): array
@@ -369,7 +387,9 @@ class InID_SignIn
                     $change['user_email'] = $email;
                 }
                 wp_update_user($change);
-                $this->apply_role($user_id, isset($u['role']) && $u['role'] ? [$u['role']] : []);
+                $roles = isset($u['role']) && $u['role'] ? [$u['role']] : [];
+                $this->apply_role($user_id, $roles);
+                InID_Access::remember($user_id, $roles, $this->access->permissions_of($roles));
             }
         } elseif ($type === 'user.deleted') {
             // Gone from the app: their last copy (if InID gives one), and no more sign-ins
